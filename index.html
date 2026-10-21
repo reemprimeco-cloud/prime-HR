@@ -321,6 +321,15 @@ html[dir="ltr"] .num{direction:ltr;}
   *{scroll-behavior:auto;}
 }
 
+/* Notice bar + holiday manager */
+.notice-bar{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;background:#eef4fd;border:1px solid #cfe0f7;border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;}
+.notice-bar div{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 260px;}
+.notice-bar b{color:var(--navy);font-size:.88rem;}
+.notice-bar span{color:var(--text);font-size:.82rem;line-height:1.6;}
+.leave-preview-holidays{font-size:.78rem;color:var(--navy);background:#eef4fd;border-radius:6px;padding:6px 10px;margin-top:8px;line-height:1.6;}
+.hol-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;}
+.hol-form .field label{font-size:.8rem;}
+
 /* Inline errors + confirm dialog */
 .field-error{font-size:.8rem;font-weight:600;color:var(--red);margin-top:6px;line-height:1.45;}
 [aria-invalid="true"]{border-color:var(--red) !important;outline-color:var(--red) !important;}
@@ -874,13 +883,36 @@ const TR = {
   col_from_date: {ar:'من تاريخ', en:'From'},
   col_to_date: {ar:'إلى تاريخ', en:'To'},
   col_days_count: {ar:'عدد الأيام', en:'Days'},
-  leave_footnote: {ar:'يُحسب رصيد الإجازات تلقائياً: 30 يوم عمل في السنة (2.5 يوم عن كل شهر خدمة) منذ تاريخ التعيين، وفق المادة 70 من قانون العمل. أيام الإجازة تُحسب أيام عمل فقط، ولا يُحتسب فيها يوما الجمعة والسبت، ويمكن تعديل العدد لاستبعاد العطل الرسمية. يستحق الموظف إجازة السنة الأولى بعد 6 أشهر من الخدمة. ما يتجاوز الرصيد يُسجَّل بدون أجر ويُخصم من الراتب الشهري.', en:'Leave accrues automatically: 30 working days per year (2.5 days per month of service) since the hire date, per Article 70 of the Labour Law. Leave days count working days only; Fridays and Saturdays are excluded, and the count can be edited to exclude official holidays. First-year leave is due after 6 months of service. Days beyond the balance are recorded as unpaid and deducted from the monthly salary.'},
+  leave_footnote: {ar:'يُحسب رصيد الإجازات تلقائياً: 30 يوم عمل في السنة (2.5 يوم عن كل شهر خدمة) منذ تاريخ التعيين، وفق المادة 70 من قانون العمل. أيام الإجازة تُحسب أيام عمل فقط، ولا يُحتسب فيها يوما الجمعة والسبت ولا العطل الرسمية الواقعة خلالها. يستحق الموظف إجازة السنة الأولى بعد 6 أشهر من الخدمة. ما يتجاوز الرصيد يُسجَّل بدون أجر ويُخصم من الراتب الشهري.', en:'Leave accrues automatically: 30 working days per year (2.5 days per month of service) since the hire date, per Article 70 of the Labour Law. Leave days count working days only; Fridays, Saturdays and official holidays inside the leave are excluded. First-year leave is due after 6 months of service. Days beyond the balance are recorded as unpaid and deducted from the monthly salary.'},
   leave_preview_available: {ar:'الرصيد المتاح حالياً', en:'Currently available balance'},
   leave_preview_paid: {ar:'أيام مدفوعة (من الرصيد)', en:'Paid days (from balance)'},
   leave_preview_unpaid: {ar:'أيام غير مدفوعة الأجر', en:'Unpaid days'},
   leave_preview_deduction: {ar:'الخصم من الراتب', en:'Salary deduction'},
   leave_preview_warning: {ar:'⚠ عدد الأيام المطلوبة أكبر من الرصيد المتاح. الفرق يُسجَّل كإجازة بدون أجر ويُخصم من راتب الموظف الشهري.', en:'⚠ Requested days exceed the available balance. The difference is recorded as unpaid leave and deducted from the employee\u2019s monthly salary.'},
   col_paid_unpaid: {ar:'مدفوع / غير مدفوع', en:'Paid / Unpaid'},
+  leave_preview_holidays: {ar:'عطل رسمية مستثناة', en:'Official holidays excluded'},
+  recalc_banner_title: {ar:'إجازات محسوبة بالطريقة القديمة', en:'Leave recorded with the old day count'},
+  recalc_banner_text: {ar:'يوجد {n} سجل إجازة احتُسب بالأيام التقويمية. إعادة الاحتساب تستبعد الجمعة والسبت والعطل الرسمية وتعيد توزيع المدفوع وغير المدفوع.', en:'{n} leave records were counted in calendar days. Recalculating excludes Fridays, Saturdays and official holidays and re-splits paid/unpaid days.'},
+  recalc_title: {ar:'إعادة احتساب الإجازات', en:'Recalculate leave'},
+  recalc_btn: {ar:'إعادة الاحتساب', en:'Recalculate'},
+  recalc_confirm: {ar:'سيتم تحديث {n} سجل إجازة.\nمجموع الأيام: {before} يوم ← {after} يوم عمل.\nيُعاد توزيع الأيام المدفوعة وبدون أجر حسب الرصيد.', en:'{n} leave records will be updated.\nTotal days: {before} → {after} working days.\nPaid and unpaid days are re-split against the balance.'},
+  recalc_skipped: {ar:'{n} سجل عُدّلت أيامه يدوياً سابقاً: يبقى عدد أيامه كما هو.', en:'{n} records with manually edited days keep their day count.'},
+  recalc_nothing: {ar:'لا توجد سجلات تحتاج إعادة احتساب', en:'No records need recalculating'},
+  recalc_done: {ar:'تمت إعادة احتساب {n} سجل', en:'{n} records recalculated'},
+  recalc_partial: {ar:'تعذر تحديث {n} سجل. حاول مرة أخرى.', en:'{n} records could not be updated. Please try again.'},
+  hol_title: {ar:'العطل الرسمية', en:'Official holidays'},
+  hol_builtin_title: {ar:'القائمة المدمجة مفعّلة', en:'Built-in list in use'},
+  hol_builtin_text: {ar:'لتعديل العطل من هنا، نفّذ ملف الترحيل supabase/migrations/20261021_public_holidays.sql مرة واحدة في Supabase.', en:'To edit holidays here, run supabase/migrations/20261021_public_holidays.sql once in Supabase.'},
+  hol_date: {ar:'التاريخ', en:'Date'},
+  hol_name: {ar:'المناسبة', en:'Occasion'},
+  hol_name_ar: {ar:'الاسم بالعربي', en:'Arabic name'},
+  hol_name_en: {ar:'الاسم بالإنجليزي', en:'English name'},
+  hol_approx: {ar:'تاريخ تقريبي (بانتظار الإعلان الرسمي)', en:'Approximate date (pending official announcement)'},
+  hol_approx_badge: {ar:'تقريبي', en:'Approx.'},
+  hol_fixed_badge: {ar:'مؤكد', en:'Confirmed'},
+  hol_add: {ar:'إضافة / تحديث', en:'Add / update'},
+  hol_saved: {ar:'تم حفظ العطلة', en:'Holiday saved'},
+  hol_confirm_delete: {ar:'حذف هذه العطلة من القائمة؟', en:'Remove this holiday from the list?'},
   leave_preview_working: {ar:'أيام عمل / أيام تقويمية', en:'Working / calendar days'},
   leave_preview_first6: {ar:'⚠ الموظف لم يُكمل 6 أشهر في الخدمة. حسب المادة 70 من قانون العمل، يستحق إجازة السنة الأولى بعد 6 أشهر على الأقل من الخدمة.', en:'⚠ The employee has not completed 6 months of service. Under Article 70 of the Labour Law, first-year leave is due after at least 6 months of service.'},
   leave_total_unpaid: {ar:'إجمالي أيام بدون أجر', en:'Total unpaid days'},
@@ -890,7 +922,7 @@ const TR = {
   field_from_date_req: {ar:'من تاريخ *', en:'From date *'},
   field_to_date_req: {ar:'إلى تاريخ *', en:'To date *'},
   field_days: {ar:'عدد الأيام', en:'Number of days'},
-  hint_days_auto: {ar:'يُحسب تلقائياً أيام عمل فقط (بدون الجمعة والسبت). يمكن تعديله يدوياً لاستبعاد العطل الرسمية.', en:'Calculated automatically as working days (Fridays and Saturdays excluded). Edit it to exclude official holidays.'},
+  hint_days_auto: {ar:'يُحسب تلقائياً أيام عمل فقط، بدون الجمعة والسبت والعطل الرسمية. يمكن تعديله يدوياً.', en:'Calculated automatically as working days, excluding Fridays, Saturdays and official holidays. You can edit it.'},
   btn_record_leave_submit: {ar:'تسجيل الإجازة', en:'Record leave'},
   toast_leave_added: {ar:'تمت إضافة الإجازة', en:'Leave added'},
   err_dates_required: {ar:'يرجى إدخال تاريخ البداية والنهاية', en:'Please enter start and end dates'},
@@ -1140,16 +1172,65 @@ function todayStr(){ return new Date().toISOString().slice(0,10); }
 function nowTimeStr(){ const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function round3(n){ return Math.round(safeNum(n)*1000)/1000; }
 function round2(n){ return Math.round(safeNum(n)*100)/100; }
-/* Leave days = working days only. Kuwait Labour Law Art. 70 (as amended): annual leave is 30 *working* days;
-   weekly rest days (Friday & Saturday) are not counted. Official holidays inside a leave can be removed by editing the day count. */
 const WEEKLY_REST_DAYS = [5, 6]; // 0=Sun … 5=Fri, 6=Sat
+/* ============ Official holidays (Kuwait) ============
+   Built-in list so leave counting works out of the box. When the public_holidays table exists
+   (supabase/migrations/*_public_holidays.sql) the admin-managed list replaces it.
+   Islamic holidays follow moon sighting and the Cabinet / Civil Service Commission announcement — marked approx. */
+const BUILTIN_HOLIDAYS = (function(){
+  const list = [];
+  for(let y=2024; y<=2028; y++){
+    list.push({date:y+'-01-01', ar:'رأس السنة الميلادية', en:"New Year's Day", approx:false});
+    list.push({date:y+'-02-25', ar:'العيد الوطني', en:'National Day', approx:false});
+    list.push({date:y+'-02-26', ar:'عيد التحرير', en:'Liberation Day', approx:false});
+  }
+  return list.concat([
+    {date:'2026-01-18', ar:'الإسراء والمعراج', en:"Isra & Mi'raj", approx:false},
+    {date:'2026-03-20', ar:'عيد الفطر', en:'Eid al-Fitr', approx:true},
+    {date:'2026-03-21', ar:'عيد الفطر', en:'Eid al-Fitr', approx:true},
+    {date:'2026-03-22', ar:'عيد الفطر', en:'Eid al-Fitr', approx:true},
+    {date:'2026-05-26', ar:'وقفة عرفة', en:'Arafat Day', approx:true},
+    {date:'2026-05-27', ar:'عيد الأضحى', en:'Eid al-Adha', approx:true},
+    {date:'2026-05-28', ar:'عيد الأضحى', en:'Eid al-Adha', approx:true},
+    {date:'2026-05-29', ar:'عيد الأضحى', en:'Eid al-Adha', approx:true},
+    {date:'2026-06-16', ar:'رأس السنة الهجرية', en:'Islamic New Year', approx:true},
+    {date:'2026-08-27', ar:'المولد النبوي', en:"Prophet's Birthday", approx:true}
+  ]).sort(function(a,b){ return a.date.localeCompare(b.date); });
+})();
+let holidays = BUILTIN_HOLIDAYS.slice();
+let holidaysSource = 'builtin'; // 'builtin' | 'db' | 'db-missing'
+let holidaySet = new Set(holidays.map(function(h){ return h.date; }));
+function setHolidays(list, source){
+  holidays = list.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  holidaysSource = source;
+  holidaySet = new Set(holidays.map(function(h){ return h.date; }));
+}
+async function loadHolidays(){
+  try{
+    const res = await sb.from('public_holidays').select('id,date,name_ar,name_en,approx').order('date');
+    if(res.error){ setHolidays(BUILTIN_HOLIDAYS, 'db-missing'); return; }
+    if(res.data && res.data.length){
+      setHolidays(res.data.map(function(r){ return {id:r.id, date:r.date, ar:r.name_ar, en:r.name_en||r.name_ar, approx:!!r.approx}; }), 'db');
+    } else setHolidays(BUILTIN_HOLIDAYS, 'db');
+  }catch(e){ setHolidays(BUILTIN_HOLIDAYS, 'db-missing'); }
+}
+function holidaysInRange(dateFrom, dateTo){
+  return holidays.filter(function(h){
+    if(h.date < dateFrom || h.date > dateTo) return false;
+    return WEEKLY_REST_DAYS.indexOf(new Date(h.date).getUTCDay()) === -1;
+  });
+}
+
+/* Leave days = working days only. Kuwait Labour Law Art. 70 (as amended): annual leave is 30 *working* days;
+   weekly rest days (Friday & Saturday) and official holidays falling inside the leave are not counted. */
+
 function daysBetween(dateFrom, dateTo){
   const d1 = new Date(dateFrom);
   const d2 = new Date(dateTo);
   if(isNaN(d1)||isNaN(d2)||d2<d1) return 0;
   let n = 0;
   for(const d = new Date(d1); d <= d2; d.setUTCDate(d.getUTCDate()+1)){
-    if(WEEKLY_REST_DAYS.indexOf(d.getUTCDay()) === -1) n++;
+    if(WEEKLY_REST_DAYS.indexOf(d.getUTCDay()) === -1 && !holidaySet.has(d.toISOString().slice(0,10))) n++;
   }
   return n;
 }
@@ -1188,6 +1269,8 @@ function updateLeavePreview(){
   const cal = calendarDaysBetween(form.dateFrom.value, form.dateTo.value);
   let html = '';
   if(cal && cal !== days) html += '<div class="leave-preview-row"><span>'+t('leave_preview_working')+'</span><b>'+fmtNum(days,0)+' / '+fmtNum(cal,0)+' '+t('day_suffix')+'</b></div>';
+  const hol = (form.dateFrom.value && form.dateTo.value) ? holidaysInRange(form.dateFrom.value, form.dateTo.value) : [];
+  if(hol.length) html += '<div class="leave-preview-holidays">'+t('leave_preview_holidays')+': '+hol.map(function(h){ return escapeHtml(currentLang==='en'?h.en:h.ar)+' ('+fmtDate(h.date)+')'; }).join('، ')+'</div>';
   html += '<div class="leave-preview-row"><span>'+t('leave_preview_available')+'</span><b>'+fmtNum(available,1)+' '+t('day_suffix')+'</b></div>';
   html += '<div class="leave-preview-row"><span>'+t('leave_preview_paid')+'</span><b class="text-positive">'+fmtNum(paidDays,1)+' '+t('day_suffix')+'</b></div>';
   if(unpaidDays>0){
@@ -1348,6 +1431,7 @@ function setSyncStatus(ok, msg){
 }
 
 async function loadDataFromSupabase(){
+  const holidaysLoad = loadHolidays();
   const [empRes, loanRes, eosRes, leaveRes] = await Promise.all([
     sb.from('employees').select('*').order('no'),
     sb.from('loans').select('*'),
@@ -1365,6 +1449,7 @@ async function loadDataFromSupabase(){
   state.loans = loanRes.data.map(mapLoanFromDb);
   state.eosPayments = eosRes.data.map(mapEosFromDb);
   state.leaveRecords = leaveRes.data.map(mapLeaveFromDb);
+  await holidaysLoad;
   state.nextEmployeeNo = state.employees.reduce(function(m,e){ return Math.max(m, e.no); }, 0) + 1;
   setSyncStatus(true);
   return true;
@@ -2422,6 +2507,11 @@ function renderLeaveShell(){
   html += '<thead><tr><th>'+t('col_employee')+'</th><th>'+t('col_from_date')+'</th><th>'+t('col_to_date')+'</th><th>'+t('col_days_count')+'</th><th>'+t('col_paid_unpaid')+'</th><th>'+t('col_notes')+'</th><th>'+t('col_actions')+'</th></tr></thead>';
   html += '<tbody id="leaveTbody"></tbody></table></div></div>';
   html += '<p style="font-size:.76rem;color:var(--text-muted);margin-top:10px;line-height:1.6">'+t('leave_footnote')+'</p>';
+  const recalc = planLeaveRecalc();
+  if(recalc.changes.length){
+    html = '<div class="notice-bar" role="status"><div><b>'+t('recalc_banner_title')+'</b><span>'+t('recalc_banner_text').replace('{n}', recalc.changes.length)+'</span></div>'+
+      '<button type="button" class="btn-primary" data-action="recalc-leave">'+t('recalc_btn')+'</button></div>' + html;
+  }
   root.innerHTML = html;
   renderLeaveRows();
 }
@@ -2536,6 +2626,61 @@ async function handleLeaveSubmit(form){
   if(uiState.activeTab==='dashboard') renderDashboard();
 }
 
+/* Recalculate leave records saved before working-day counting.
+   A record is migrated only if its stored days equal the plain calendar count (i.e. it was auto-calculated);
+   records whose days were edited by hand are left untouched. Paid/unpaid is then re-split per employee in
+   date order against the current balance, the same rule used when saving a leave. */
+function planLeaveRecalc(){
+  const changes = [];
+  const byEmp = {};
+  state.leaveRecords.forEach(function(r){ (byEmp[r.employeeId] = byEmp[r.employeeId] || []).push(r); });
+  let migrated = 0, skippedManual = 0;
+  Object.keys(byEmp).forEach(function(empId){
+    const emp = state.employees.find(function(e){ return e.id===empId; });
+    const recs = byEmp[empId].slice().sort(function(a,b){ return (a.dateFrom||'').localeCompare(b.dateFrom||''); });
+    const newDays = {};
+    let any = false;
+    recs.forEach(function(r){
+      const cal = calendarDaysBetween(r.dateFrom, r.dateTo);
+      const work = daysBetween(r.dateFrom, r.dateTo);
+      if(cal && Math.abs(r.days - cal) < 0.001 && Math.abs(work - r.days) >= 0.001){ newDays[r.id] = work; any = true; migrated++; }
+      else { newDays[r.id] = r.days; if(cal && Math.abs(r.days - cal) >= 0.001 && Math.abs(r.days - work) >= 0.001) skippedManual++; }
+    });
+    if(!any || !emp) return;
+    const years = calcYears(emp.hireDate, emp.status==='terminated' ? emp.serviceEndDate : null);
+    let remaining = round2(years * 30);
+    recs.forEach(function(r){
+      const days = newDays[r.id];
+      const paid = round2(Math.max(0, Math.min(days, remaining)));
+      const unpaid = round2(Math.max(0, days - paid));
+      remaining = round2(remaining - paid);
+      if(Math.abs(days - r.days) >= 0.001 || Math.abs(paid - r.paidDays) >= 0.001 || Math.abs(unpaid - (r.unpaidDays||0)) >= 0.001){
+        changes.push({rec:r, days:days, paid:paid, unpaid:unpaid});
+      }
+    });
+  });
+  return {changes:changes, migrated:migrated, skippedManual:skippedManual};
+}
+async function runLeaveRecalc(){
+  const plan = planLeaveRecalc();
+  if(!plan.changes.length){ toast(t('recalc_nothing')); return; }
+  const before = plan.changes.reduce(function(s,c){ return s + c.rec.days; }, 0);
+  const after = plan.changes.reduce(function(s,c){ return s + c.days; }, 0);
+  const msg = t('recalc_confirm').replace('{n}', plan.changes.length).replace('{before}', round2(before)).replace('{after}', round2(after)) +
+    (plan.skippedManual ? '\n'+t('recalc_skipped').replace('{n}', plan.skippedManual) : '');
+  if(!(await confirmAction({title:t('recalc_title'), message:msg, confirmLabel:t('recalc_btn')}))) return;
+  let failed = 0;
+  for(const c of plan.changes){
+    const { error } = await sb.from('leave_records').update({days:c.days, paid_days:c.paid, unpaid_days:c.unpaid}).eq('id', c.rec.id);
+    if(error){ failed++; continue; }
+    c.rec.days = c.days; c.rec.paidDays = c.paid; c.rec.unpaidDays = c.unpaid;
+  }
+  setSyncStatus(failed===0);
+  toast(failed ? t('recalc_partial').replace('{n}', failed) : t('recalc_done').replace('{n}', plan.changes.length), failed?'error':'success');
+  renderLeaveShell();
+  if(uiState.activeTab==='dashboard') renderDashboard();
+}
+
 async function deleteLeaveRec(id){
   if(!(await confirmAction({message:t('confirm_delete_record'), danger:true, confirmLabel:t('btn_delete')}))) return;
   const { error } = await sb.from('leave_records').delete().eq('id', id);
@@ -2594,6 +2739,7 @@ async function renderAdminShell(){
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
   html += '<thead><tr><th>'+t('col_company')+'</th><th>'+t('col_email')+'</th><th>'+t('col_plan')+'</th><th>'+t('col_signup_date')+'</th><th>'+t('col_expiry_date')+'</th><th>'+t('col_status')+'</th><th>'+t('col_actions')+'</th></tr></thead>';
   html += '<tbody id="adminTbody"></tbody></table></div></div>';
+  html += holidaysAdminHtml();
   root.innerHTML = html;
   renderAdminRows();
   // filter button listeners
@@ -2695,6 +2841,45 @@ async function handleApproveSubmit(form){
   if(error){ toast((isRenewal ? t('err_renew_failed') : t('err_activate_failed'))+friendlyErr(error), 'error'); return; }
   toast(isRenewal ? t('toast_renewed') : t('toast_activated'));
   closeModal();
+  renderAdminShell();
+}
+
+function holidaysAdminHtml(){
+  const editable = holidaysSource === 'db';
+  let h = '<div class="section-toolbar" style="margin-top:28px"><h2>'+t('hol_title')+'</h2></div>';
+  if(!editable){
+    h += '<div class="notice-bar"><div><b>'+t('hol_builtin_title')+'</b><span>'+t('hol_builtin_text')+'</span></div></div>';
+  } else {
+    h += '<form id="holidayForm" class="hol-form">'+
+      '<div class="field"><label>'+t('hol_date')+'</label><input type="date" name="date" required></div>'+
+      '<div class="field"><label>'+t('hol_name_ar')+'</label><input type="text" name="name_ar" required></div>'+
+      '<div class="field"><label>'+t('hol_name_en')+'</label><input type="text" name="name_en"></div>'+
+      '<div class="field checkbox-row"><input type="checkbox" name="approx" id="holApprox"><label for="holApprox">'+t('hol_approx')+'</label></div>'+
+      '<button type="submit" class="btn-primary">'+t('hol_add')+'</button></form>';
+  }
+  h += '<div class="table-card stackable"><div class="table-scroll"><table><thead><tr><th>'+t('hol_date')+'</th><th>'+t('hol_name')+'</th><th>'+t('col_status')+'</th>'+(editable?'<th>'+t('col_actions')+'</th>':'')+'</tr></thead><tbody>'+
+    holidays.slice().reverse().map(function(x){
+      return '<tr><td>'+fmtDate(x.date)+'</td><td>'+escapeHtml(currentLang==='en'?x.en:x.ar)+'</td><td>'+(x.approx?'<span class="sub-badge pending">'+t('hol_approx_badge')+'</span>':'<span class="sub-badge active">'+t('hol_fixed_badge')+'</span>')+'</td>'+
+        (editable && x.id ? '<td>'+iconBtn('hol-delete','data-hid',x.id,ICON.trash,t('btn_delete'),'danger')+'</td>' : (editable?'<td></td>':''))+'</tr>';
+    }).join('')+'</tbody></table></div></div>';
+  return h;
+}
+async function handleHolidaySubmit(form){
+  const fd = new FormData(form);
+  const row = { date: fd.get('date'), name_ar: (fd.get('name_ar')||'').trim(), name_en: (fd.get('name_en')||'').trim(), approx: fd.get('approx')==='on' };
+  if(!row.date){ fieldError(form,'date',t('err_dates_required')); return; }
+  if(!row.name_ar){ fieldError(form,'name_ar',t('err_name_required')); return; }
+  const { error } = await sb.from('public_holidays').upsert(row, {onConflict:'date'});
+  if(error){ toast(t('err_save_failed')+friendlyErr(error),'error'); return; }
+  await loadHolidays();
+  toast(t('hol_saved'));
+  renderAdminShell();
+}
+async function deleteHoliday(hid){
+  if(!(await confirmAction({message:t('hol_confirm_delete'), danger:true, confirmLabel:t('btn_delete')}))) return;
+  const { error } = await sb.from('public_holidays').delete().eq('id', hid);
+  if(error){ toast(t('err_delete_failed')+friendlyErr(error),'error'); return; }
+  await loadHolidays();
   renderAdminShell();
 }
 
@@ -2852,6 +3037,8 @@ document.addEventListener('click', function(e){
   else if(action==='drw-add-loan') drawerQuickAdd('loan', id);
   else if(action==='drw-add-eos') drawerQuickAdd('eos', id);
   else if(action==='drw-print') printSettlement(id);
+  else if(action==='recalc-leave') runLeaveRecalc();
+  else if(action==='hol-delete') deleteHoliday(btn.dataset.hid);
   else if(action==='edit-employee') openEditEmployee(id);
   else if(action==='delete-employee') deleteEmployee(id);
   else if(action==='open-end-service') openEndServiceModal(id);
@@ -2906,7 +3093,8 @@ const FORM_HANDLERS = {
   loanPaymentForm: function(f){ return handleLoanPaymentSubmit(f); },
   eosForm: function(f){ return handleEosSubmit(f); },
   leaveForm: function(f){ return handleLeaveSubmit(f); },
-  approveForm: function(f){ return handleApproveSubmit(f); }
+  approveForm: function(f){ return handleApproveSubmit(f); },
+  holidayForm: function(f){ return handleHolidaySubmit(f); }
 };
 document.addEventListener('submit', function(e){
   const form = e.target;
