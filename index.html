@@ -866,7 +866,7 @@ const TR = {
   leave_add_first_desc: {ar:'يجب إضافة موظف واحد على الأقل قبل تسجيل إجازة.', en:'You must add at least one employee before recording leave.'},
   leave_title: {ar:'سجل الإجازات', en:'Leave Records'},
   btn_add_leave: {ar:'+ تسجيل إجازة', en:'+ Record leave'},
-  leave_accrued: {ar:'المستحق تلقائياً (30 يوم/سنة)', en:'Auto-accrued (30 days/year)'},
+  leave_accrued: {ar:'المستحق تلقائياً (30 يوم عمل/سنة)', en:'Auto-accrued (30 working days/year)'},
   leave_used: {ar:'المستخدم (مسجّل)', en:'Used (recorded)'},
   leave_remaining: {ar:'الرصيد المتبقي', en:'Remaining balance'},
   leave_pay_due: {ar:'بدل الإجازات المستحق', en:'Leave pay due'},
@@ -874,14 +874,15 @@ const TR = {
   col_from_date: {ar:'من تاريخ', en:'From'},
   col_to_date: {ar:'إلى تاريخ', en:'To'},
   col_days_count: {ar:'عدد الأيام', en:'Days'},
-  leave_footnote: {ar:'يُحسب رصيد الإجازات تلقائياً: 2.5 يوم عن كل شهر خدمة (30 يوم/سنة) منذ تاريخ التعيين. عند تسجيل إجازة تتجاوز الرصيد المتاح، يُحتسب الفائض تلقائياً كأيام غير مدفوعة الأجر ويُخصم من راتب الموظف.',
-                   en:'Leave balance accrues automatically: 2.5 days per month worked (30 days/year) since hire date. If a recorded leave exceeds the available balance, the excess is automatically treated as unpaid leave and deducted from the employee\u2019s salary.'},
+  leave_footnote: {ar:'يُحسب رصيد الإجازات تلقائياً: 30 يوم عمل في السنة (2.5 يوم عن كل شهر خدمة) منذ تاريخ التعيين، وفق المادة 70 من قانون العمل. أيام الإجازة تُحسب أيام عمل فقط، ولا يُحتسب فيها يوما الجمعة والسبت، ويمكن تعديل العدد لاستبعاد العطل الرسمية. يستحق الموظف إجازة السنة الأولى بعد 6 أشهر من الخدمة. ما يتجاوز الرصيد يُسجَّل بدون أجر ويُخصم من الراتب الشهري.', en:'Leave accrues automatically: 30 working days per year (2.5 days per month of service) since the hire date, per Article 70 of the Labour Law. Leave days count working days only; Fridays and Saturdays are excluded, and the count can be edited to exclude official holidays. First-year leave is due after 6 months of service. Days beyond the balance are recorded as unpaid and deducted from the monthly salary.'},
   leave_preview_available: {ar:'الرصيد المتاح حالياً', en:'Currently available balance'},
   leave_preview_paid: {ar:'أيام مدفوعة (من الرصيد)', en:'Paid days (from balance)'},
   leave_preview_unpaid: {ar:'أيام غير مدفوعة الأجر', en:'Unpaid days'},
   leave_preview_deduction: {ar:'الخصم من الراتب', en:'Salary deduction'},
-  leave_preview_warning: {ar:'⚠ عدد الأيام المطلوبة أكبر من الرصيد المتاح. الفرق سيُسجَّل كإجازة بدون راتب ويُخصم تلقائياً من مستحقات الموظف.', en:'⚠ Requested days exceed the available balance. The difference will be recorded as unpaid leave and automatically deducted from the employee\u2019s dues.'},
+  leave_preview_warning: {ar:'⚠ عدد الأيام المطلوبة أكبر من الرصيد المتاح. الفرق يُسجَّل كإجازة بدون أجر ويُخصم من راتب الموظف الشهري.', en:'⚠ Requested days exceed the available balance. The difference is recorded as unpaid leave and deducted from the employee\u2019s monthly salary.'},
   col_paid_unpaid: {ar:'مدفوع / غير مدفوع', en:'Paid / Unpaid'},
+  leave_preview_working: {ar:'أيام عمل / أيام تقويمية', en:'Working / calendar days'},
+  leave_preview_first6: {ar:'⚠ الموظف لم يُكمل 6 أشهر في الخدمة. حسب المادة 70 من قانون العمل، يستحق إجازة السنة الأولى بعد 6 أشهر على الأقل من الخدمة.', en:'⚠ The employee has not completed 6 months of service. Under Article 70 of the Labour Law, first-year leave is due after at least 6 months of service.'},
   leave_total_unpaid: {ar:'إجمالي أيام بدون أجر', en:'Total unpaid days'},
   leave_total_deduction: {ar:'إجمالي الخصم المستحق', en:'Total deduction due'},
   modal_add_leave: {ar:'تسجيل إجازة', en:'Record leave'},
@@ -889,7 +890,7 @@ const TR = {
   field_from_date_req: {ar:'من تاريخ *', en:'From date *'},
   field_to_date_req: {ar:'إلى تاريخ *', en:'To date *'},
   field_days: {ar:'عدد الأيام', en:'Number of days'},
-  hint_days_auto: {ar:'يُحسب تلقائياً من التواريخ — يمكن تعديله يدوياً (مثلاً لاستثناء عطل رسمية)', en:'Calculated automatically from dates — can be edited manually (e.g. to exclude public holidays)'},
+  hint_days_auto: {ar:'يُحسب تلقائياً أيام عمل فقط (بدون الجمعة والسبت). يمكن تعديله يدوياً لاستبعاد العطل الرسمية.', en:'Calculated automatically as working days (Fridays and Saturdays excluded). Edit it to exclude official holidays.'},
   btn_record_leave_submit: {ar:'تسجيل الإجازة', en:'Record leave'},
   toast_leave_added: {ar:'تمت إضافة الإجازة', en:'Leave added'},
   err_dates_required: {ar:'يرجى إدخال تاريخ البداية والنهاية', en:'Please enter start and end dates'},
@@ -922,11 +923,11 @@ const TR = {
   drw_eos_basis: {ar:'أساس نهاية الخدمة', en:'EOS basis'},
   drw_leave_basis: {ar:'أساس بدل الإجازة', en:'Leave pay basis'},
   drw_leave: {ar:'الإجازات', en:'Leave'},
-  drw_leave_accrued: {ar:'المستحق (30 يوماً/سنة)', en:'Accrued (30 days/yr)'},
+  drw_leave_accrued: {ar:'المستحق (30 يوم عمل/سنة)', en:'Accrued (30 working days/yr)'},
   drw_leave_taken: {ar:'المستخدم (مدفوع)', en:'Taken (paid)'},
   drw_leave_balance: {ar:'الرصيد', en:'Balance'},
   drw_leave_unpaid: {ar:'أيام بدون أجر', en:'Unpaid days'},
-  drw_leave_deduction: {ar:'خصم الأيام بدون أجر', en:'Unpaid-days deduction'},
+  drw_leave_deduction: {ar:'خصم من الراتب (أيام بدون أجر)', en:'Deducted from salary (unpaid days)'},
   drw_loans: {ar:'السلف والخصومات', en:'Loans & deductions'},
   drw_remaining: {ar:'المتبقي', en:'Remaining'},
   drw_eos_payments: {ar:'مدفوعات نهاية الخدمة', en:'EOS payments'},
@@ -948,7 +949,7 @@ const TR = {
   prt_sign_employer: {ar:'توقيع صاحب العمل', en:'Employer signature'},
   prt_stamp: {ar:'الختم', en:'Stamp'},
   prt_footer: {ar:'أُعد بواسطة نظام Prime HR', en:'Prepared with Prime HR'},
-  kpi_net_due_note: {ar:'نهاية الخدمة + بدل الإجازات − السلف − المدفوع − خصم الأيام بدون أجر. للموظفين النشطين يُحسب على أساس الإنهاء من صاحب العمل.', en:'EOS + leave pay − loans − paid − unpaid-days deduction. Active staff are estimated on an employer-termination basis.'},
+  kpi_net_due_note: {ar:'نهاية الخدمة + بدل الإجازات − السلف − المدفوع. للموظفين النشطين يُحسب على أساس الإنهاء من صاحب العمل.', en:'EOS + leave pay − loans − paid. Active staff are estimated on an employer-termination basis.'},
   kpi_active_short: {ar:'نشط', en:'active'},
   btn_confirm: {ar:'تأكيد', en:'Confirm'},
   confirm_title: {ar:'تأكيد الإجراء', en:'Please confirm'},
@@ -975,7 +976,6 @@ const TR = {
   eos_preview_leave: {ar:'بدل رصيد الإجازات', en:'Leave balance pay'},
   eos_preview_loans: {ar:'السلف المتبقية', en:'Outstanding loans'},
   eos_preview_paid: {ar:'مدفوع مسبقاً من المكافأة', en:'Gratuity already paid'},
-  eos_preview_unpaid: {ar:'خصم أيام بدون أجر', en:'Unpaid-days deduction'},
   eos_preview_net: {ar:'الصافي المستحق للموظف', en:'Net due to employee'},
   eos_preview_days: {ar:'يوم', en:'days'},
   confirm_reactivate: {ar:'هل تريد إعادة تفعيل هذا الموظف كنشط؟ سيتم حذف بيانات إنهاء الخدمة (لن تُحذف السلف أو الإجازات المسجلة).', en:'Reactivate this employee as active? Their service-end details will be cleared (loans and leave records stay intact).'},
@@ -1140,11 +1140,23 @@ function todayStr(){ return new Date().toISOString().slice(0,10); }
 function nowTimeStr(){ const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function round3(n){ return Math.round(safeNum(n)*1000)/1000; }
 function round2(n){ return Math.round(safeNum(n)*100)/100; }
+/* Leave days = working days only. Kuwait Labour Law Art. 70 (as amended): annual leave is 30 *working* days;
+   weekly rest days (Friday & Saturday) are not counted. Official holidays inside a leave can be removed by editing the day count. */
+const WEEKLY_REST_DAYS = [5, 6]; // 0=Sun … 5=Fri, 6=Sat
 function daysBetween(dateFrom, dateTo){
   const d1 = new Date(dateFrom);
   const d2 = new Date(dateTo);
   if(isNaN(d1)||isNaN(d2)||d2<d1) return 0;
-  return Math.round((d2-d1)/(1000*60*60*24))+1;
+  let n = 0;
+  for(const d = new Date(d1); d <= d2; d.setUTCDate(d.getUTCDate()+1)){
+    if(WEEKLY_REST_DAYS.indexOf(d.getUTCDay()) === -1) n++;
+  }
+  return n;
+}
+function calendarDaysBetween(dateFrom, dateTo){
+  const d1 = new Date(dateFrom), d2 = new Date(dateTo);
+  if(isNaN(d1)||isNaN(d2)||d2<d1) return 0;
+  return Math.round((d2-d1)/86400000)+1;
 }
 function updateLeaveDays(){
   const f = document.querySelector('#leaveForm input[name="dateFrom"]');
@@ -1173,12 +1185,19 @@ function updateLeavePreview(){
   const leavePayBasis = emp.leavePayBasis === 'basic' ? emp.basic : currentSalary;
   const dailyRate = leavePayBasis / 30;
   const unpaidDeduction = round3(dailyRate * unpaidDays);
-  let html = '<div class="leave-preview-row"><span>'+t('leave_preview_available')+'</span><b>'+fmtNum(available,1)+' '+t('day_suffix')+'</b></div>';
+  const cal = calendarDaysBetween(form.dateFrom.value, form.dateTo.value);
+  let html = '';
+  if(cal && cal !== days) html += '<div class="leave-preview-row"><span>'+t('leave_preview_working')+'</span><b>'+fmtNum(days,0)+' / '+fmtNum(cal,0)+' '+t('day_suffix')+'</b></div>';
+  html += '<div class="leave-preview-row"><span>'+t('leave_preview_available')+'</span><b>'+fmtNum(available,1)+' '+t('day_suffix')+'</b></div>';
   html += '<div class="leave-preview-row"><span>'+t('leave_preview_paid')+'</span><b class="text-positive">'+fmtNum(paidDays,1)+' '+t('day_suffix')+'</b></div>';
   if(unpaidDays>0){
     html += '<div class="leave-preview-row"><span>'+t('leave_preview_unpaid')+'</span><b class="text-negative">'+fmtNum(unpaidDays,1)+' '+t('day_suffix')+'</b></div>';
     html += '<div class="leave-preview-row leave-preview-deduction"><span>'+t('leave_preview_deduction')+'</span><b>'+fmtKWD(unpaidDeduction)+'</b></div>';
     html += '<div class="leave-preview-warning">'+t('leave_preview_warning')+'</div>';
+  }
+  const monthsAtStart = calcYears(emp.hireDate, form.dateFrom.value || null) * 12;
+  if(form.dateFrom.value && monthsAtStart < 6){
+    html += '<div class="leave-preview-warning">'+t('leave_preview_first6')+'</div>';
   }
   previewEl.innerHTML = html;
 }
@@ -1268,7 +1287,8 @@ function computeEmployeeDerived(emp){
   const leavePay = dailyRate * leaveBalance;
   const loansRemaining = getEmployeeLoansRemaining(emp.id);
   const eosPaid = getEmployeeEosPaid(emp.id);
-  const netDue = eos + leavePay - loansRemaining - eosPaid - leaveUnpaidDeduction;
+  // Unpaid-leave days are deducted from the monthly salary when they occur, so they are not subtracted again here
+  const netDue = eos + leavePay - loansRemaining - eosPaid;
   return {currentSalary, eosSalary, years, eos, eosEmployer, eosResignation, leaveAccrued, leaveTaken, leaveBalance, leavePay, dailyRate, leaveUnpaidDays, leaveUnpaidDeduction, loansRemaining, eosPaid, netDue, isFinal:isTerminated};
 }
 function empLink(id){
@@ -1847,7 +1867,6 @@ function settlementRowsHtml(emp, st){
     row(t('eos_preview_leave')+' ('+numSpan(fmtNum(d.leaveBalance,1))+' '+t('eos_preview_days')+')', '+ '+fmtKWD(d.leavePay))+
     (d.loansRemaining ? row(t('eos_preview_loans'), '− '+fmtKWD(d.loansRemaining)) : '')+
     (d.eosPaid ? row(t('eos_preview_paid'), '− '+fmtKWD(d.eosPaid)) : '')+
-    (d.leaveUnpaidDeduction ? row(t('eos_preview_unpaid')+' ('+numSpan(fmtNum(d.leaveUnpaidDays,1))+' '+t('eos_preview_days')+')', '− '+fmtKWD(d.leaveUnpaidDeduction)) : '')+
     row(t('eos_preview_net'), fmtKWD(d.netDue), 'settle-net '+(d.netDue>=0?'text-positive':'text-negative'));
 }
 function updateEndServicePreview(){
@@ -2737,8 +2756,8 @@ function exportExcel(){
   const isAr = currentLang === 'ar';
 
   const empHeader = isAr
-    ? ['رقم الموظف','اسم الموظف','تاريخ التعيين','الحالة','تاريخ إنهاء الخدمة','مدة الخدمة (سنة)','نوع الإنهاء','الراتب الأساسي','بدل السكن','بدل النقل','بدلات أخرى','إجمالي الراتب','نهاية الخدمة — صاحب العمل','نهاية الخدمة — استقالة','نهاية الخدمة (نهائي)','أساس احتساب نهاية الخدمة','إجازات مستحقة (يوم)','إجازات مستخدمة (يوم)','رصيد الإجازات (يوم)','أساس بدل الإجازة','بدل الإجازات','السلف المتبقية','المدفوع من نهاية الخدمة','خصم أيام بدون أجر','الصافي المستحق']
-    : ['No.','Employee Name','Hire Date','Status','Service End Date','Years of Service','Termination Type','Basic Salary','Housing','Transport','Other','Total Salary','EOS — Employer basis','EOS — Resignation basis','EOS (Final)','EOS Calculation Basis','Leave Accrued (days)','Leave Used (days)','Leave Balance (days)','Leave Pay Basis','Leave Pay','Remaining Loans','EOS Paid','Unpaid-days Deduction','Net Due'];
+    ? ['رقم الموظف','اسم الموظف','تاريخ التعيين','الحالة','تاريخ إنهاء الخدمة','مدة الخدمة (سنة)','نوع الإنهاء','الراتب الأساسي','بدل السكن','بدل النقل','بدلات أخرى','إجمالي الراتب','نهاية الخدمة — صاحب العمل','نهاية الخدمة — استقالة','نهاية الخدمة (نهائي)','أساس احتساب نهاية الخدمة','إجازات مستحقة (يوم)','إجازات مستخدمة (يوم)','رصيد الإجازات (يوم)','أساس بدل الإجازة','بدل الإجازات','السلف المتبقية','المدفوع من نهاية الخدمة','الصافي المستحق']
+    : ['No.','Employee Name','Hire Date','Status','Service End Date','Years of Service','Termination Type','Basic Salary','Housing','Transport','Other','Total Salary','EOS — Employer basis','EOS — Resignation basis','EOS (Final)','EOS Calculation Basis','Leave Accrued (days)','Leave Used (days)','Leave Balance (days)','Leave Pay Basis','Leave Pay','Remaining Loans','EOS Paid','Net Due'];
   const empRows = state.employees.map(function(e){
     const d = computeEmployeeDerived(e);
     const statusLabel = e.status==='terminated' ? t('status_terminated_emp') : t('status_active_emp');
@@ -2748,7 +2767,7 @@ function exportExcel(){
     const eosEmployerVal = d.isFinal ? '—' : round3(d.eosEmployer);
     const eosResignationVal = d.isFinal ? '—' : round3(d.eosResignation);
     const eosFinalVal = d.isFinal ? round3(d.eos) : '—';
-    return [e.no, e.name, e.hireDate, statusLabel, e.serviceEndDate||'—', round2(d.years), termLabel, e.basic, e.housing, e.transport, e.other, round3(d.currentSalary), eosEmployerVal, eosResignationVal, eosFinalVal, eosBasisLabel, round2(d.leaveAccrued), round2(d.leaveTaken), round2(d.leaveBalance), leaveBasisLabel, round3(d.leavePay), round3(d.loansRemaining), round3(d.eosPaid), round3(d.leaveUnpaidDeduction), round3(d.netDue)];
+    return [e.no, e.name, e.hireDate, statusLabel, e.serviceEndDate||'—', round2(d.years), termLabel, e.basic, e.housing, e.transport, e.other, round3(d.currentSalary), eosEmployerVal, eosResignationVal, eosFinalVal, eosBasisLabel, round2(d.leaveAccrued), round2(d.leaveTaken), round2(d.leaveBalance), leaveBasisLabel, round3(d.leavePay), round3(d.loansRemaining), round3(d.eosPaid), round3(d.netDue)];
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([empHeader].concat(empRows)), 'Employees');
 

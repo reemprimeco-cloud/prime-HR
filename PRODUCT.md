@@ -20,7 +20,7 @@ People use it on both phone (installed as a PWA) and desktop. Neither device is 
 Prime HR replaces error-prone Excel sheets and heavyweight HR suites with a focused tool for Kuwaiti labor-law calculations. Success means the user trusts the numbers it shows (end-of-service, leave balance, outstanding loans) enough to pay out on them, and can find any figure in seconds.
 
 ## Positioning
-- **Kuwaiti labor-law math built in.** End-of-service follows Law 6/2010 Art. 51 (15 days per year for the first 5 years, 30 days per year after, capped at 18 months) and the Art. 53 resignation tiers (0 / ½ / ⅔ / full at under 3 / 3–5 / 5–10 / 10+ years). Leave accrues 30 days per year per Art. 70. All of it is calculated automatically, and EOS can be based on basic or full salary.
+- **Kuwaiti labor-law math built in.** End-of-service follows Law 6/2010 Art. 51 (15 days per year for the first 5 years, 30 days per year after, capped at 18 months) and the Art. 53 resignation tiers (0 / ½ / ⅔ / full at under 3 / 3–5 / 5–10 / 10+ years). Leave accrues 30 working days per year per Art. 70 (as amended): leave days count working days only, with Friday and Saturday as weekly rest days, and first-year leave is due after 6 months of service. The daily rate is monthly salary ÷ 30. Unpaid days beyond the balance are deducted from the monthly salary, not from end-of-service dues. All of it is calculated automatically, and EOS can be based on basic or full salary.
 - **Simple and cheap.** 49.000 KWD per year for unlimited employees, with no training needed.
 - **Arabic-first.** Built RTL in Arabic, with full English parity.
 - **Personal support.** Activation, renewal and support happen directly with Prime over WhatsApp (+965 65068000).
