@@ -51,6 +51,7 @@ body{
 ::selection{background:rgba(26,102,204,.18);}
 input,select,textarea{caret-color:var(--blue);accent-color:var(--blue);}
 button:focus-visible,a:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:none;box-shadow:var(--focus);}
+[tabindex="-1"]:focus,[tabindex="-1"]:focus-visible{outline:none;box-shadow:none;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 button,input,select,textarea{font-family:inherit;}
 
@@ -343,6 +344,87 @@ html[dir="ltr"] .num{direction:ltr;}
 .settle-net.text-positive b{color:var(--green);}
 .settle-net.text-negative b{color:var(--red);}
 
+/* Employee name opens the detail drawer */
+.name-link{background:none;border:none;padding:4px 0;margin:-4px 0;font:inherit;color:var(--navy);font-weight:700;cursor:pointer;text-align:start;text-decoration:underline;text-decoration-color:rgba(13,43,94,.25);text-underline-offset:4px;text-decoration-thickness:1px;}
+.name-link:hover{color:var(--blue);text-decoration-color:currentColor;}
+
+/* Employee detail drawer */
+.drawer-overlay{position:fixed;inset:0;z-index:150;background:rgba(10,20,40,.42);opacity:0;visibility:hidden;transition:opacity .2s ease-out,visibility 0s linear .2s;}
+.drawer-overlay.show{opacity:1;visibility:visible;transition:opacity .2s ease-out;}
+.drawer{position:absolute;top:0;bottom:0;inset-inline-end:0;width:min(560px,100%);background:var(--bg);display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(10,20,40,.22);transform:translateX(-100%);transition:transform .26s cubic-bezier(.22,1,.36,1);outline:none;}
+[dir="ltr"] .drawer{transform:translateX(100%);}
+.drawer-overlay.show .drawer{transform:none;}
+body.drawer-open{overflow:hidden;}
+.drw-head{display:flex;align-items:flex-start;gap:14px;padding:18px 22px 14px;padding-top:max(18px,env(safe-area-inset-top));background:var(--surface);border-bottom:1px solid var(--border);}
+.drw-head .modal-close{margin:-6px -8px 0;order:2;margin-inline-start:auto;}
+.drw-id{min-width:0;}
+.drw-id h2{margin:0;font-size:1.2rem;font-weight:800;color:var(--navy);line-height:1.35;outline:none;}
+.drw-meta{margin-top:6px;font-size:.8rem;color:var(--text-muted);line-height:1.9;}
+.drw-meta .sub-badge,.drw-meta .badge{vertical-align:1px;}
+.drw-actions{display:flex;flex-wrap:wrap;gap:8px;padding:12px 22px;background:var(--surface);border-bottom:1px solid var(--border);}
+.drw-actions::-webkit-scrollbar{display:none;}
+.drw-act{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:8px 13px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--navy);font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s;}
+.drw-act svg{width:16px;height:16px;flex-shrink:0;}
+.drw-act:hover{background:#f3f6fb;border-color:#cfd6e4;}
+.drw-act.warn{color:var(--amber);}
+.drw-act.warn:hover{background:var(--amber-bg);border-color:#f2d9b8;}
+.drw-body{flex:1;overflow-y:auto;padding:18px 22px 28px;padding-bottom:max(28px,env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.drw-lead{background:linear-gradient(135deg,var(--navy),var(--navy-dark));color:#fff;border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;}
+.drw-lead .label{font-size:.8rem;font-weight:700;color:rgba(255,255,255,.78);}
+.drw-lead .value{font-size:1.9rem;font-weight:800;line-height:1.2;margin:4px 0 12px;}
+.drw-lead .note{font-size:.74rem;color:rgba(255,255,255,.72);margin-top:8px;}
+.drw-switch{display:inline-flex;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:3px;gap:3px;}
+.drw-switch button{border:none;background:none;color:rgba(255,255,255,.82);font:inherit;font-size:.8rem;font-weight:700;padding:8px 14px;min-height:36px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s;}
+.drw-switch button[aria-checked="true"]{background:#fff;color:var(--navy);}
+.drw-switch button:focus-visible{box-shadow:0 0 0 3px rgba(255,255,255,.55);}
+.drw-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
+.drw-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.drw-sec h3{margin:0;font-size:.9rem;font-weight:800;color:var(--navy);}
+.drw-sec .settle{margin:0;border:none;padding:0;background:none;}
+.drw-note{font-size:.76rem;color:var(--text-muted);margin-top:8px;line-height:1.6;}
+.drw-list{list-style:none;margin:8px 0 0;padding:0;}
+.drw-list li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-top:1px solid var(--border);font-size:.82rem;}
+.drw-list li span{color:var(--text);min-width:0;}
+.drw-list li b{font-weight:700;white-space:nowrap;text-align:end;}
+.drw-list li small{font-weight:600;color:var(--text-muted);font-size:.74rem;}
+.drw-empty{margin:4px 0 0;font-size:.82rem;color:var(--text-muted);}
+@media (max-width:640px){
+  .drawer{width:100%;}
+  .drw-head,.drw-actions,.drw-body{padding-inline:16px;}
+  .drw-actions{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(to left,#000 85%,transparent);mask-image:linear-gradient(to left,#000 85%,transparent);}
+  [dir="ltr"] .drw-actions{-webkit-mask-image:linear-gradient(to right,#000 85%,transparent);mask-image:linear-gradient(to right,#000 85%,transparent);}
+  .drw-lead .value{font-size:1.65rem;}
+}
+@media (prefers-reduced-motion: reduce){ .drawer,.drawer-overlay{transition:none;} }
+
+/* Printable settlement statement (A4) */
+#printSheet{display:none;}
+@media print{
+  @page{size:A4;margin:16mm 14mm;}
+  html,body{background:#fff !important;}
+  body > *:not(#printSheet){display:none !important;}
+  #printSheet{display:block !important;color:#111;font-size:11pt;}
+  .prt h1{font-size:15pt;margin:4px 0 0;color:#0d2b5e;}
+  .prt h2{font-size:11pt;margin:18px 0 6px;color:#0d2b5e;border-bottom:1px solid #0d2b5e;padding-bottom:4px;}
+  .prt-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-bottom:3px solid #0d2b5e;padding-bottom:10px;}
+  .prt-company{font-size:12pt;font-weight:800;}
+  .prt-issued{font-size:9.5pt;text-align:end;color:#333;}
+  .prt-kv,.prt-list{width:100%;border-collapse:collapse;font-size:10pt;min-width:0;}
+  .prt-kv th,.prt-kv td,.prt-list th,.prt-list td{border:1px solid #c9ced8;padding:6px 8px;text-align:start;}
+  .prt-kv th{width:38%;background:#f2f4f8;font-weight:700;}
+  .prt-list thead th{background:#f2f4f8;}
+  .prt tbody tr:last-child td,.prt tbody tr:last-child th{border-bottom:1px solid #c9ced8;}
+  .prt-settle{border:1px solid #c9ced8;border-radius:0;background:#fff;padding:8px 12px;margin:0;}
+  .prt-settle .settle-row{font-size:10pt;padding:3px 0;}
+  .prt-settle .settle-row span{color:#333;}
+  .prt-settle .settle-net b{color:#111 !important;font-size:12pt;}
+  .prt-legal{font-size:8.5pt;color:#444;line-height:1.6;margin-top:14px;}
+  .prt-sign{display:flex;gap:24px;margin-top:40px;}
+  .prt-sign div{flex:1;border-top:1px solid #111;padding-top:6px;font-size:9.5pt;text-align:center;}
+  .prt-foot{margin-top:28px;font-size:8pt;color:#777;text-align:center;}
+  .prt .num{font-family:'Barlow','Cairo',sans-serif;}
+}
+
 /* Admin panel */
 .admin-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
 .sub-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700;}
@@ -570,6 +652,11 @@ html[dir="ltr"] .num{direction:ltr;}
 </footer>
 </div> <!-- /appRoot -->
 
+<div class="drawer-overlay" id="drawerOverlay">
+  <aside class="drawer" id="empDrawer" role="dialog" aria-modal="true"></aside>
+</div>
+<div id="printSheet" aria-hidden="true"></div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box" id="modalBox" role="dialog" aria-modal="true"></div>
 </div>
@@ -586,6 +673,7 @@ const SUPABASE_URL = 'https://aqvsthtevskvpfqeceny.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_49RpfYoLoWWwKePqNzO6VQ_TEGhj8fo';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_EMAIL = 'reem@primekw.net';
+let currentCompanyName = '';
 
 /* ── إعدادات الاشتراك ── */
 const PAYMENT_CONFIG = {
@@ -816,6 +904,50 @@ const TR = {
   btn_end_service: {ar:'إنهاء الخدمة', en:'End service'},
   btn_reactivate: {ar:'إعادة تفعيل', en:'Reactivate'},
   btn_close: {ar:'إغلاق', en:'Close'},
+  drw_view: {ar:'عرض تفاصيل الموظف', en:'View employee details'},
+  drw_no: {ar:'رقم', en:'No.'},
+  drw_since: {ar:'منذ', en:'since'},
+  drw_scenario: {ar:'سيناريو الإنهاء', en:'Termination scenario'},
+  drw_sc_employer: {ar:'إنهاء من صاحب العمل', en:'Employer ends'},
+  drw_sc_resign: {ar:'استقالة', en:'Resignation'},
+  drw_as_of_today: {ar:'تقدير حتى تاريخ اليوم', en:'Estimate as of today'},
+  drw_final_on: {ar:'نهائي بتاريخ', en:'Final as of'},
+  drw_breakdown: {ar:'تفصيل المستحقات', en:'Entitlement breakdown'},
+  drw_salary: {ar:'الراتب الشهري', en:'Monthly salary'},
+  drw_basic: {ar:'الأساسي', en:'Basic'},
+  drw_housing: {ar:'بدل السكن', en:'Housing'},
+  drw_transport: {ar:'بدل المواصلات', en:'Transport'},
+  drw_other: {ar:'بدلات أخرى', en:'Other'},
+  drw_total: {ar:'الإجمالي', en:'Total'},
+  drw_eos_basis: {ar:'أساس نهاية الخدمة', en:'EOS basis'},
+  drw_leave_basis: {ar:'أساس بدل الإجازة', en:'Leave pay basis'},
+  drw_leave: {ar:'الإجازات', en:'Leave'},
+  drw_leave_accrued: {ar:'المستحق (30 يوماً/سنة)', en:'Accrued (30 days/yr)'},
+  drw_leave_taken: {ar:'المستخدم (مدفوع)', en:'Taken (paid)'},
+  drw_leave_balance: {ar:'الرصيد', en:'Balance'},
+  drw_leave_unpaid: {ar:'أيام بدون أجر', en:'Unpaid days'},
+  drw_leave_deduction: {ar:'خصم الأيام بدون أجر', en:'Unpaid-days deduction'},
+  drw_loans: {ar:'السلف والخصومات', en:'Loans & deductions'},
+  drw_remaining: {ar:'المتبقي', en:'Remaining'},
+  drw_eos_payments: {ar:'مدفوعات نهاية الخدمة', en:'EOS payments'},
+  drw_none: {ar:'لا توجد سجلات', en:'No records'},
+  drw_act_leave: {ar:'إجازة', en:'Leave'},
+  drw_act_loan: {ar:'سلفة / خصم', en:'Loan / deduction'},
+  drw_act_eos: {ar:'دفعة نهاية خدمة', en:'EOS payment'},
+  drw_act_print: {ar:'طباعة الكشف', en:'Print statement'},
+  drw_paid_unpaid: {ar:'مدفوع / بدون أجر', en:'paid / unpaid'},
+  prt_title: {ar:'كشف مستحقات نهاية الخدمة', en:'End-of-Service Settlement Statement'},
+  prt_estimate_title: {ar:'كشف تقديري لمستحقات نهاية الخدمة', en:'Estimated End-of-Service Statement'},
+  prt_issued: {ar:'تاريخ الإصدار', en:'Issued on'},
+  prt_employee: {ar:'بيانات الموظف', en:'Employee'},
+  prt_end_date: {ar:'تاريخ انتهاء الخدمة', en:'Service end date'},
+  prt_type: {ar:'نوع الإنهاء', en:'Termination type'},
+  prt_estimate_note: {ar:'هذا الكشف تقديري محسوب حتى تاريخ الإصدار ولا يُعد مخالصة نهائية.', en:'This statement is an estimate as of the issue date and is not a final settlement.'},
+  prt_legal: {ar:'الاحتساب وفق قانون العمل في القطاع الأهلي رقم 6 لسنة 2010: المادة 51 (المكافأة)، المادة 53 (الاستقالة)، المادة 70 (الإجازة السنوية).', en:'Calculated under Kuwait Private Sector Labour Law No. 6 of 2010: Art. 51 (gratuity), Art. 53 (resignation), Art. 70 (annual leave).'},
+  prt_sign_employee: {ar:'توقيع الموظف', en:'Employee signature'},
+  prt_sign_employer: {ar:'توقيع صاحب العمل', en:'Employer signature'},
+  prt_stamp: {ar:'الختم', en:'Stamp'},
+  prt_footer: {ar:'أُعد بواسطة نظام Prime HR', en:'Prepared with Prime HR'},
   kpi_net_due_note: {ar:'نهاية الخدمة + بدل الإجازات − السلف − المدفوع. للموظفين النشطين يُحسب على أساس الإنهاء من صاحب العمل.', en:'EOS + leave pay − loans − paid. Active staff are estimated on an employer-termination basis.'},
   kpi_active_short: {ar:'نشط', en:'active'},
   btn_confirm: {ar:'تأكيد', en:'Confirm'},
@@ -1138,6 +1270,10 @@ function computeEmployeeDerived(emp){
   const netDue = eos + leavePay - loansRemaining - eosPaid;
   return {currentSalary, eosSalary, years, eos, eosEmployer, eosResignation, leaveAccrued, leaveTaken, leaveBalance, leavePay, dailyRate, leaveUnpaidDays, leaveUnpaidDeduction, loansRemaining, eosPaid, netDue, isFinal:isTerminated};
 }
+function empLink(id){
+  const e = state.employees.find(function(x){ return x.id===id; });
+  return e ? '<button type="button" class="name-link" data-action="open-employee" data-id="'+e.id+'">'+escapeHtml(e.name)+'</button>' : escapeHtml(t('deleted_employee'));
+}
 function empName(id){
   const e = state.employees.find(function(x){ return x.id===id; });
   return e ? e.name : t('deleted_employee');
@@ -1187,6 +1323,7 @@ function setSyncStatus(ok, msg){
   const status = document.getElementById('saveStatus');
   if(dot) dot.classList.toggle('error', !ok);
   if(status) status.textContent = msg || (ok ? t('sync_connected')+nowTimeStr() : t('sync_error'));
+  if(typeof drawerState!=='undefined') refreshDrawer();
 }
 
 async function loadDataFromSupabase(){
@@ -1255,15 +1392,17 @@ function openModal(html){
 }
 function closeModal(){
   document.getElementById('modalOverlay').classList.remove('show');
+  refreshDrawer();
   if(modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus({preventScroll:true});
   modalReturnFocus = null;
 }
 document.addEventListener('keydown', function(e){
   const overlay = document.getElementById('modalOverlay');
   const a2hs = document.getElementById('a2hsOverlay');
-  const openBox = overlay.classList.contains('show') ? document.getElementById('modalBox') : (a2hs.classList.contains('show') ? document.getElementById('a2hsBox') : null);
+  const drawerOpen = document.getElementById('drawerOverlay').classList.contains('show');
+  const openBox = overlay.classList.contains('show') ? document.getElementById('modalBox') : (a2hs.classList.contains('show') ? document.getElementById('a2hsBox') : (drawerOpen ? document.getElementById('empDrawer') : null));
   if(!openBox) return;
-  if(e.key === 'Escape'){ e.preventDefault(); if(openBox.id==='a2hsBox') closeA2HS(); else closeModal(); return; }
+  if(e.key === 'Escape'){ e.preventDefault(); if(openBox.id==='a2hsBox') closeA2HS(); else if(openBox.id==='empDrawer') closeDrawer(); else closeModal(); return; }
   if(e.key === 'Tab'){
     const f = Array.prototype.filter.call(openBox.querySelectorAll('button,[href],input:not([type=hidden]),select,textarea,summary'), function(el){ return !el.disabled && el.offsetParent !== null; });
     if(!f.length) return;
@@ -1368,7 +1507,10 @@ const ICON = (function(){
     endService: o+'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/></svg>',
     reactivate: o+'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
     payment: o+'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
-    revoke: o+'<circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/></svg>'
+    revoke: o+'<circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/></svg>',
+    calendar: o+'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    wallet: o+'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 13h2"/><path d="M2 10h20"/></svg>',
+    print: o+'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>'
   };
 })();
 function iconBtn(action, idAttr, id, icon, label, cls){
@@ -1469,7 +1611,7 @@ function renderDashboard(){
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
   html += '<thead><tr><th>'+t('col_employee')+'</th><th>'+t('col_hire_date')+'</th><th>'+t('col_years')+'</th><th>'+t('col_eos_est')+'</th><th>'+t('col_net_due')+'</th></tr></thead><tbody>';
   top5.forEach(function(x){
-    html += '<tr><td>'+escapeHtml(x.emp.name)+'</td><td>'+fmtDate(x.emp.hireDate)+'</td><td>'+fmtNum(x.d.years,1)+' '+t('years_suffix')+'</td><td>'+fmtKWD(x.d.eos)+'</td>'+
+    html += '<tr><td><button type="button" class="name-link" data-action="open-employee" data-id="'+x.emp.id+'">'+escapeHtml(x.emp.name)+'</button></td><td>'+fmtDate(x.emp.hireDate)+'</td><td>'+fmtNum(x.d.years,1)+' '+t('years_suffix')+'</td><td>'+fmtKWD(x.d.eos)+'</td>'+
       '<td class="'+(x.d.netDue>=0?'text-positive':'text-negative')+'">'+fmtKWD(x.d.netDue)+'</td></tr>';
   });
   html += '</tbody></table></div></div>';
@@ -1531,7 +1673,7 @@ function renderEmployeesRows(){
       : iconBtn('open-end-service','data-id',emp.id,ICON.endService,t('btn_end_service'),'warn');
     return '<tr>'+
       '<td>'+numSpan(emp.no)+'</td>'+
-      '<td>'+escapeHtml(emp.name)+'</td>'+
+      '<td><button type="button" class="name-link" data-action="open-employee" data-id="'+emp.id+'" aria-label="'+t('drw_view')+': '+escapeHtml(emp.name)+'">'+escapeHtml(emp.name)+'</button></td>'+
       '<td>'+fmtDate(emp.hireDate)+'</td>'+
       '<td>'+fmtNum(d.years,1)+' '+t('years_suffix')+'</td>'+
       '<td>'+fmtKWD(d.currentSalary)+'</td>'+
@@ -1679,15 +1821,9 @@ function endServiceModalHtml(emp){
   '</form>';
 }
 /* Live settlement breakdown inside the end-service modal: same math as computeEmployeeDerived, frozen at the chosen date/type */
-function updateEndServicePreview(){
-  const form = document.getElementById('endServiceForm');
-  const box = document.getElementById('endServicePreview');
-  if(!form || !box) return;
-  const emp = state.employees.find(function(e){ return e.id===form.empId.value; });
-  if(!emp) return;
-  const endDate = form.serviceEndDate.value;
-  const type = form.terminationTypeActual.value || 'employer';
-  const sim = Object.assign({}, emp, {status:'terminated', serviceEndDate:endDate || todayStr(), terminationType:type});
+/* Settlement for an employee frozen at endDate under a termination type — same math as computeEmployeeDerived */
+function settlementFor(emp, endDate, type){
+  const sim = Object.assign({}, emp, {status:'terminated', serviceEndDate:endDate || todayStr(), terminationType:type || 'employer'});
   const d = computeEmployeeDerived(sim);
   const base = calcEOSBase(d.years, d.eosSalary);
   const capped = base >= d.eosSalary*18 - 0.0005 && d.years > 0;
@@ -1695,22 +1831,191 @@ function updateEndServicePreview(){
   if(type!=='resignation' || d.years>=10) share = t('eos_preview_share_full');
   else if(d.years<3) share = t('eos_preview_share_none');
   else share = d.years<5 ? '½' : '⅔';
+  return {d:d, base:base, capped:capped, share:share, type:type || 'employer'};
+}
+function settlementRowsHtml(emp, st){
+  const d = st.d;
   const row = function(label, value, cls){ return '<div class="settle-row'+(cls?' '+cls:'')+'"><span>'+label+'</span><b>'+value+'</b></div>'; };
   const basisLabel = emp.eosPayBasis==='basic' ? t('eos_preview_basis_basic') : t('eos_preview_basis_full');
-  box.innerHTML = '<div class="settle-title">'+t('eos_preview_title')+'</div>'+
-    row(t('eos_preview_years'), numSpan(fmtNum(d.years,2))+' '+t('years_suffix'))+
+  return row(t('eos_preview_years'), numSpan(fmtNum(d.years,2))+' '+t('years_suffix'))+
     row(t('eos_preview_salary')+' ('+basisLabel+')', fmtKWD(d.eosSalary))+
-    row(t('eos_preview_base'), fmtKWD(base))+
-    '<div class="settle-rule">'+t('eos_preview_rule')+(capped?' — '+t('eos_preview_cap'):'')+'</div>'+
-    (type==='resignation' ? row(t('eos_preview_share'), share) : '')+
+    row(t('eos_preview_base'), fmtKWD(st.base))+
+    '<div class="settle-rule">'+t('eos_preview_rule')+(st.capped?' — '+t('eos_preview_cap'):'')+'</div>'+
+    (st.type==='resignation' ? row(t('eos_preview_share'), st.share) : '')+
     row(t('eos_preview_eos'), fmtKWD(d.eos), 'settle-strong')+
     row(t('eos_preview_leave')+' ('+numSpan(fmtNum(d.leaveBalance,1))+' '+t('eos_preview_days')+')', '+ '+fmtKWD(d.leavePay))+
     (d.loansRemaining ? row(t('eos_preview_loans'), '− '+fmtKWD(d.loansRemaining)) : '')+
     (d.eosPaid ? row(t('eos_preview_paid'), '− '+fmtKWD(d.eosPaid)) : '')+
     row(t('eos_preview_net'), fmtKWD(d.netDue), 'settle-net '+(d.netDue>=0?'text-positive':'text-negative'));
 }
+function updateEndServicePreview(){
+  const form = document.getElementById('endServiceForm');
+  const box = document.getElementById('endServicePreview');
+  if(!form || !box) return;
+  const emp = state.employees.find(function(e){ return e.id===form.empId.value; });
+  if(!emp) return;
+  const st = settlementFor(emp, form.serviceEndDate.value, form.terminationTypeActual.value || 'employer');
+  box.innerHTML = '<div class="settle-title">'+t('eos_preview_title')+'</div>'+settlementRowsHtml(emp, st);
+}
 document.addEventListener('input', function(e){ if(e.target.form && e.target.form.id==='endServiceForm') updateEndServicePreview(); });
 document.addEventListener('change', function(e){ if(e.target.form && e.target.form.id==='endServiceForm') updateEndServicePreview(); });
+/* ============ Employee detail drawer ============ */
+const drawerState = { empId:null, scenario:'employer', returnFocus:null, pushed:false };
+function drawerSection(title, body, extra){
+  return '<section class="drw-sec"><div class="drw-sec-head"><h3>'+title+'</h3>'+(extra||'')+'</div>'+body+'</section>';
+}
+function kv(label, value, cls){ return '<div class="settle-row'+(cls?' '+cls:'')+'"><span>'+label+'</span><b>'+value+'</b></div>'; }
+function drawerSettlement(emp){
+  return emp.status==='terminated'
+    ? settlementFor(emp, emp.serviceEndDate, emp.terminationType || 'employer')
+    : settlementFor(emp, todayStr(), drawerState.scenario);
+}
+function renderDrawer(){
+  const panel = document.getElementById('empDrawer');
+  const emp = state.employees.find(function(e){ return e.id===drawerState.empId; });
+  if(!emp){ hideDrawer(); return; }
+  const isTerm = emp.status==='terminated';
+  const st = drawerSettlement(emp);
+  const d = st.d;
+  const live = computeEmployeeDerived(emp);
+  const loans = state.loans.filter(function(l){ return l.employeeId===emp.id; }).sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+  const leaves = state.leaveRecords.filter(function(r){ return r.employeeId===emp.id; }).sort(function(a,b){ return (b.dateFrom||'').localeCompare(a.dateFrom||''); });
+  const pays = state.eosPayments.filter(function(p){ return p.employeeId===emp.id; }).sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+  const statusBadge = isTerm
+    ? '<span class="sub-badge inactive">'+t('status_terminated_emp')+'</span> <span class="badge '+(emp.terminationType==='resignation'?'resignation':'employer')+'">'+(emp.terminationType==='resignation'?t('badge_resignation'):t('badge_employer'))+'</span>'
+    : '<span class="sub-badge active">'+t('status_active_emp')+'</span>';
+  const btn = function(action, icon, label, cls){ return '<button type="button" class="drw-act'+(cls?' '+cls:'')+'" data-action="'+action+'" data-id="'+emp.id+'">'+icon+'<span>'+label+'</span></button>'; };
+
+  let h = '';
+  h += '<header class="drw-head">'+
+    '<button type="button" class="modal-close" data-action="close-drawer" aria-label="'+t('btn_close')+'">×</button>'+
+    '<div class="drw-id"><h2 id="drwTitle" tabindex="-1">'+escapeHtml(emp.name)+'</h2>'+
+      '<div class="drw-meta">'+t('drw_no')+' '+numSpan(emp.no)+' · '+statusBadge+' · '+t('drw_since')+' '+fmtDate(emp.hireDate)+' · '+fmtNum(live.years,1)+' '+t('years_suffix')+'</div></div>'+
+  '</header>';
+  h += '<div class="drw-actions">'+
+    btn('drw-add-leave', ICON.calendar, t('drw_act_leave'))+
+    btn('drw-add-loan', ICON.payment, t('drw_act_loan'))+
+    btn('drw-add-eos', ICON.wallet, t('drw_act_eos'))+
+    btn('edit-employee', ICON.edit, t('btn_edit'))+
+    btn('drw-print', ICON.print, t('drw_act_print'))+
+    (isTerm ? btn('reactivate-employee', ICON.reactivate, t('btn_reactivate')) : btn('open-end-service', ICON.endService, t('btn_end_service'), 'warn'))+
+  '</div>';
+  h += '<div class="drw-body">';
+  // Lead: net due + scenario
+  h += '<div class="drw-lead"><div class="label">'+t('eos_preview_net')+'</div>'+
+    '<div class="value">'+fmtKWD(d.netDue)+'</div>'+
+    (isTerm
+      ? '<div class="note">'+t('drw_final_on')+' '+fmtDate(emp.serviceEndDate)+'</div>'
+      : '<div class="drw-switch" role="radiogroup" aria-label="'+t('drw_scenario')+'">'+
+          '<button type="button" role="radio" aria-checked="'+(drawerState.scenario==='employer')+'" data-action="drw-scenario" data-sc="employer">'+t('drw_sc_employer')+'</button>'+
+          '<button type="button" role="radio" aria-checked="'+(drawerState.scenario==='resignation')+'" data-action="drw-scenario" data-sc="resignation">'+t('drw_sc_resign')+'</button>'+
+        '</div><div class="note">'+t('drw_as_of_today')+'</div>')+
+  '</div>';
+  h += drawerSection(t('drw_breakdown'), '<div class="settle">'+settlementRowsHtml(emp, st)+'</div>');
+  h += drawerSection(t('drw_salary'),
+    kv(t('drw_basic'), fmtKWD(emp.basic))+kv(t('drw_housing'), fmtKWD(emp.housing))+kv(t('drw_transport'), fmtKWD(emp.transport))+kv(t('drw_other'), fmtKWD(emp.other))+
+    kv(t('drw_total'), fmtKWD(live.currentSalary), 'settle-strong')+
+    '<div class="drw-note">'+t('drw_eos_basis')+': '+(emp.eosPayBasis==='basic'?t('eos_preview_basis_basic'):t('eos_preview_basis_full'))+' · '+t('drw_leave_basis')+': '+(emp.leavePayBasis==='basic'?t('eos_preview_basis_basic'):t('eos_preview_basis_full'))+'</div>');
+  let leaveBody = kv(t('drw_leave_accrued'), numSpan(fmtNum(d.leaveAccrued,1))+' '+t('eos_preview_days'))+
+    kv(t('drw_leave_taken'), numSpan(fmtNum(d.leaveTaken,1))+' '+t('eos_preview_days'))+
+    kv(t('drw_leave_balance'), numSpan(fmtNum(d.leaveBalance,1))+' '+t('eos_preview_days'), 'settle-strong')+
+    (d.leaveUnpaidDays ? kv(t('drw_leave_unpaid'), numSpan(fmtNum(d.leaveUnpaidDays,1))+' '+t('eos_preview_days'))+kv(t('drw_leave_deduction'), '− '+fmtKWD(d.leaveUnpaidDeduction)) : '');
+  leaveBody += leaves.length ? '<ul class="drw-list">'+leaves.slice(0,6).map(function(r){
+      const paid = r.paidDays!=null ? r.paidDays : r.days;
+      return '<li><span>'+fmtDate(r.dateFrom)+' – '+fmtDate(r.dateTo)+(r.notes?' · '+escapeHtml(r.notes):'')+'</span><b>'+numSpan(fmtNum(r.days,0))+' '+t('eos_preview_days')+(r.unpaidDays?' <small>('+numSpan(fmtNum(paid,0))+' / '+numSpan(fmtNum(r.unpaidDays,0))+' '+t('drw_paid_unpaid')+')</small>':'')+'</b></li>';
+    }).join('')+'</ul>' : '';
+  h += drawerSection(t('drw_leave'), leaveBody);
+  h += drawerSection(t('drw_loans'), loans.length ? '<ul class="drw-list">'+loans.map(function(l){
+      const rem = safeNum(l.original)-safeNum(l.deducted);
+      return '<li><span><span class="badge '+(l.type==='violation'?'violation':'advance')+'">'+(l.type==='violation'?t('badge_violation'):t('badge_advance'))+'</span> '+fmtDate(l.date)+(l.description?' · '+escapeHtml(l.description):'')+'</span>'+
+        '<b>'+fmtKWD(rem)+'<small> / '+fmtKWD(l.original)+'</small></b></li>';
+    }).join('')+'</ul>'+kv(t('drw_remaining'), fmtKWD(d.loansRemaining), 'settle-strong') : '<p class="drw-empty">'+t('drw_none')+'</p>');
+  h += drawerSection(t('drw_eos_payments'), pays.length ? '<ul class="drw-list">'+pays.map(function(p){
+      return '<li><span>'+fmtDate(p.date)+(p.month?' · '+escapeHtml(p.month):'')+(p.notes?' · '+escapeHtml(p.notes):'')+'</span><b>'+fmtKWD(p.paid)+'</b></li>';
+    }).join('')+'</ul>' : '<p class="drw-empty">'+t('drw_none')+'</p>');
+  h += '</div>';
+  panel.innerHTML = h;
+  panel.setAttribute('aria-labelledby','drwTitle');
+}
+function openEmployeeDrawer(id){
+  if(!state.employees.some(function(e){ return e.id===id; })) return;
+  const wasOpen = !!drawerState.empId;
+  drawerState.empId = id;
+  drawerState.scenario = 'employer';
+  if(!wasOpen) drawerState.returnFocus = document.activeElement;
+  renderDrawer();
+  document.getElementById('drawerOverlay').classList.add('show');
+  document.body.classList.add('drawer-open');
+  if(!wasOpen){
+    try{ history.pushState({primeDrawer:true}, ''); drawerState.pushed = true; }catch(e){ drawerState.pushed = false; }
+  }
+  setTimeout(function(){ const h = document.getElementById('drwTitle'); if(h) h.focus({preventScroll:true}); }, 30);
+}
+function hideDrawer(){
+  if(!drawerState.empId && !document.getElementById('drawerOverlay').classList.contains('show')) return;
+  drawerState.empId = null;
+  document.getElementById('drawerOverlay').classList.remove('show');
+  document.body.classList.remove('drawer-open');
+  const rf = drawerState.returnFocus; drawerState.returnFocus = null;
+  if(rf && document.contains(rf)) rf.focus({preventScroll:true});
+}
+function closeDrawer(){
+  if(drawerState.pushed && history.state && history.state.primeDrawer){ drawerState.pushed = false; history.back(); }
+  else { drawerState.pushed = false; hideDrawer(); }
+}
+window.addEventListener('popstate', function(){ if(drawerState.empId){ drawerState.pushed = false; hideDrawer(); } });
+function refreshDrawer(){ if(drawerState.empId) renderDrawer(); }
+function drawerQuickAdd(kind, id){
+  if(kind==='leave'){ uiState.leaveFilterEmp = id; openAddLeave(); }
+  else if(kind==='loan'){ openAddLoan(); }
+  else { openAddEos(); }
+  const sel = document.querySelector('#modalBox select[name=employeeId]');
+  if(sel){ sel.value = id; sel.dispatchEvent(new Event('change', {bubbles:true})); }
+}
+
+/* ============ Printable settlement statement ============ */
+function printSettlement(id){
+  const emp = state.employees.find(function(e){ return e.id===id; });
+  if(!emp) return;
+  const isTerm = emp.status==='terminated';
+  const st = drawerSettlement(emp);
+  const d = st.d;
+  const loans = state.loans.filter(function(l){ return l.employeeId===emp.id && safeNum(l.original)-safeNum(l.deducted) > 0.0005; });
+  const typeLabel = st.type==='resignation' ? t('opt_term_resignation') : t('opt_term_employer');
+  const company = currentCompanyName || 'Prime HR';
+  const cell = function(label, value){ return '<tr><th>'+label+'</th><td>'+value+'</td></tr>'; };
+  let h = '<div class="prt">';
+  h += '<header class="prt-head"><div><div class="prt-company">'+escapeHtml(company)+'</div>'+
+       '<h1>'+(isTerm ? t('prt_title') : t('prt_estimate_title'))+'</h1></div>'+
+       '<div class="prt-issued">'+t('prt_issued')+'<br><b>'+fmtDate(todayStr())+'</b></div></header>';
+  h += '<h2>'+t('prt_employee')+'</h2><table class="prt-kv">'+
+    cell(t('col_name'), escapeHtml(emp.name))+
+    cell(t('drw_no'), numSpan(emp.no))+
+    cell(t('col_hire_date'), fmtDate(emp.hireDate))+
+    cell(t('prt_end_date'), isTerm ? fmtDate(emp.serviceEndDate) : fmtDate(todayStr())+' ('+t('label_estimated')+')')+
+    cell(t('eos_preview_years'), numSpan(fmtNum(d.years,2))+' '+t('years_suffix'))+
+    cell(t('prt_type'), typeLabel)+
+    cell(t('drw_salary'), fmtKWD(d.currentSalary))+
+  '</table>';
+  h += '<h2>'+t('drw_breakdown')+'</h2><div class="settle prt-settle">'+settlementRowsHtml(emp, st)+'</div>';
+  if(loans.length){
+    h += '<h2>'+t('eos_preview_loans')+'</h2><table class="prt-list"><thead><tr><th>'+t('col_date')+'</th><th>'+t('col_description')+'</th><th>'+t('drw_remaining')+'</th></tr></thead><tbody>'+
+      loans.map(function(l){ return '<tr><td>'+fmtDate(l.date)+'</td><td>'+escapeHtml(l.description || (l.type==='violation'?t('badge_violation'):t('badge_advance')))+'</td><td>'+fmtKWD(safeNum(l.original)-safeNum(l.deducted))+'</td></tr>'; }).join('')+
+      '</tbody></table>';
+  }
+  h += '<p class="prt-legal">'+t('prt_legal')+(isTerm?'':'<br><b>'+t('prt_estimate_note')+'</b>')+'</p>';
+  h += '<div class="prt-sign"><div>'+t('prt_sign_employee')+'</div><div>'+t('prt_sign_employer')+'</div><div>'+t('prt_stamp')+'</div></div>';
+  h += '<footer class="prt-foot">'+t('prt_footer')+'</footer></div>';
+  const sheet = document.getElementById('printSheet');
+  sheet.innerHTML = h;
+  document.title = (isTerm ? t('prt_title') : t('prt_estimate_title'))+' — '+emp.name;
+  window.print();
+}
+window.addEventListener('afterprint', function(){
+  document.getElementById('printSheet').innerHTML = '';
+  document.title = 'نظام برايم للموارد البشرية | Prime HR';
+});
+
 function openEndServiceModal(id){
   const emp = state.employees.find(function(e){ return e.id===id; });
   if(!emp) return;
@@ -1809,7 +2114,7 @@ function renderLoansRows(){
       : fmtKWD(remaining);
     return '<tr>'+
       '<td>'+fmtDate(l.date)+'</td>'+
-      '<td>'+escapeHtml(empName(l.employeeId))+'</td>'+
+      '<td>'+empLink(l.employeeId)+'</td>'+
       '<td><span class="badge '+(l.type==='violation'?'violation':'advance')+'">'+(l.type==='violation'?t('badge_violation'):t('badge_advance'))+'</span></td>'+
       '<td>'+escapeHtml(l.description||'—')+'</td>'+
       '<td>'+fmtKWD(l.original)+'</td>'+
@@ -1977,7 +2282,7 @@ function renderEosRows(){
   tbody.innerHTML = list.map(function(p){
     return '<tr>'+
       '<td>'+fmtDate(p.date)+'</td>'+
-      '<td>'+escapeHtml(empName(p.employeeId))+'</td>'+
+      '<td>'+empLink(p.employeeId)+'</td>'+
       '<td>'+escapeHtml(p.month||'—')+'</td>'+
       '<td>'+fmtKWD(p.paid)+'</td>'+
       '<td>'+escapeHtml(p.notes||'—')+'</td>'+
@@ -2119,7 +2424,7 @@ function renderLeaveRows(){
       splitCell = '<span class="text-positive">'+fmtNum(paid,1)+'</span> / 0';
     }
     return '<tr>'+
-      '<td>'+escapeHtml(empName(r.employeeId))+'</td>'+
+      '<td>'+empLink(r.employeeId)+'</td>'+
       '<td>'+fmtDate(r.dateFrom)+'</td>'+
       '<td>'+fmtDate(r.dateTo)+'</td>'+
       '<td>'+fmtNum(r.days,1)+' '+t('day_suffix')+'</td>'+
@@ -2519,6 +2824,13 @@ document.addEventListener('click', function(e){
   const id = btn.dataset.id;
   if(action==='close-modal') closeModal();
   else if(action==='open-add-employee') openAddEmployee();
+  else if(action==='open-employee') openEmployeeDrawer(id);
+  else if(action==='close-drawer') closeDrawer();
+  else if(action==='drw-scenario'){ drawerState.scenario = btn.dataset.sc; renderDrawer(); const b = document.querySelector('.drw-switch [data-sc="'+drawerState.scenario+'"]'); if(b) b.focus(); }
+  else if(action==='drw-add-leave') drawerQuickAdd('leave', id);
+  else if(action==='drw-add-loan') drawerQuickAdd('loan', id);
+  else if(action==='drw-add-eos') drawerQuickAdd('eos', id);
+  else if(action==='drw-print') printSettlement(id);
   else if(action==='edit-employee') openEditEmployee(id);
   else if(action==='delete-employee') deleteEmployee(id);
   else if(action==='open-end-service') openEndServiceModal(id);
@@ -2559,6 +2871,9 @@ document.getElementById('modalOverlay').addEventListener('click', function(e){
   if(e.target.id==='modalOverlay') closeModal();
 });
 
+document.getElementById('drawerOverlay').addEventListener('click', function(e){
+  if(e.target.id==='drawerOverlay') closeDrawer();
+});
 document.getElementById('a2hsOverlay').addEventListener('click', function(e){
   if(e.target.id==='a2hsOverlay') closeA2HS();
 });
@@ -2670,6 +2985,9 @@ async function bootApp(){
       if(new Date() > expiryDate){ showExpired(user.email, pr.data.approved_at); return; }
     }
   }
+  currentCompanyName = (user && user.user_metadata && user.user_metadata.company_name) || '';
+  var sub = document.querySelector('.brand .titles p');
+  if(sub && currentCompanyName){ sub.removeAttribute('data-i18n'); sub.textContent = currentCompanyName; sub.setAttribute('dir','auto'); }
   showApp(isAdmin);
   var ok = await loadDataFromSupabase();
   if(ok) switchTab('dashboard');
