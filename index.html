@@ -948,7 +948,7 @@ const TR = {
   prt_sign_employer: {ar:'توقيع صاحب العمل', en:'Employer signature'},
   prt_stamp: {ar:'الختم', en:'Stamp'},
   prt_footer: {ar:'أُعد بواسطة نظام Prime HR', en:'Prepared with Prime HR'},
-  kpi_net_due_note: {ar:'نهاية الخدمة + بدل الإجازات − السلف − المدفوع. للموظفين النشطين يُحسب على أساس الإنهاء من صاحب العمل.', en:'EOS + leave pay − loans − paid. Active staff are estimated on an employer-termination basis.'},
+  kpi_net_due_note: {ar:'نهاية الخدمة + بدل الإجازات − السلف − المدفوع − خصم الأيام بدون أجر. للموظفين النشطين يُحسب على أساس الإنهاء من صاحب العمل.', en:'EOS + leave pay − loans − paid − unpaid-days deduction. Active staff are estimated on an employer-termination basis.'},
   kpi_active_short: {ar:'نشط', en:'active'},
   btn_confirm: {ar:'تأكيد', en:'Confirm'},
   confirm_title: {ar:'تأكيد الإجراء', en:'Please confirm'},
@@ -975,6 +975,7 @@ const TR = {
   eos_preview_leave: {ar:'بدل رصيد الإجازات', en:'Leave balance pay'},
   eos_preview_loans: {ar:'السلف المتبقية', en:'Outstanding loans'},
   eos_preview_paid: {ar:'مدفوع مسبقاً من المكافأة', en:'Gratuity already paid'},
+  eos_preview_unpaid: {ar:'خصم أيام بدون أجر', en:'Unpaid-days deduction'},
   eos_preview_net: {ar:'الصافي المستحق للموظف', en:'Net due to employee'},
   eos_preview_days: {ar:'يوم', en:'days'},
   confirm_reactivate: {ar:'هل تريد إعادة تفعيل هذا الموظف كنشط؟ سيتم حذف بيانات إنهاء الخدمة (لن تُحذف السلف أو الإجازات المسجلة).', en:'Reactivate this employee as active? Their service-end details will be cleared (loans and leave records stay intact).'},
@@ -1267,7 +1268,7 @@ function computeEmployeeDerived(emp){
   const leavePay = dailyRate * leaveBalance;
   const loansRemaining = getEmployeeLoansRemaining(emp.id);
   const eosPaid = getEmployeeEosPaid(emp.id);
-  const netDue = eos + leavePay - loansRemaining - eosPaid;
+  const netDue = eos + leavePay - loansRemaining - eosPaid - leaveUnpaidDeduction;
   return {currentSalary, eosSalary, years, eos, eosEmployer, eosResignation, leaveAccrued, leaveTaken, leaveBalance, leavePay, dailyRate, leaveUnpaidDays, leaveUnpaidDeduction, loansRemaining, eosPaid, netDue, isFinal:isTerminated};
 }
 function empLink(id){
@@ -1846,6 +1847,7 @@ function settlementRowsHtml(emp, st){
     row(t('eos_preview_leave')+' ('+numSpan(fmtNum(d.leaveBalance,1))+' '+t('eos_preview_days')+')', '+ '+fmtKWD(d.leavePay))+
     (d.loansRemaining ? row(t('eos_preview_loans'), '− '+fmtKWD(d.loansRemaining)) : '')+
     (d.eosPaid ? row(t('eos_preview_paid'), '− '+fmtKWD(d.eosPaid)) : '')+
+    (d.leaveUnpaidDeduction ? row(t('eos_preview_unpaid')+' ('+numSpan(fmtNum(d.leaveUnpaidDays,1))+' '+t('eos_preview_days')+')', '− '+fmtKWD(d.leaveUnpaidDeduction)) : '')+
     row(t('eos_preview_net'), fmtKWD(d.netDue), 'settle-net '+(d.netDue>=0?'text-positive':'text-negative'));
 }
 function updateEndServicePreview(){
@@ -2735,8 +2737,8 @@ function exportExcel(){
   const isAr = currentLang === 'ar';
 
   const empHeader = isAr
-    ? ['رقم الموظف','اسم الموظف','تاريخ التعيين','الحالة','تاريخ إنهاء الخدمة','مدة الخدمة (سنة)','نوع الإنهاء','الراتب الأساسي','بدل السكن','بدل النقل','بدلات أخرى','إجمالي الراتب','نهاية الخدمة — صاحب العمل','نهاية الخدمة — استقالة','نهاية الخدمة (نهائي)','أساس احتساب نهاية الخدمة','إجازات مستحقة (يوم)','إجازات مستخدمة (يوم)','رصيد الإجازات (يوم)','أساس بدل الإجازة','بدل الإجازات','السلف المتبقية','المدفوع من نهاية الخدمة','الصافي المستحق']
-    : ['No.','Employee Name','Hire Date','Status','Service End Date','Years of Service','Termination Type','Basic Salary','Housing','Transport','Other','Total Salary','EOS — Employer basis','EOS — Resignation basis','EOS (Final)','EOS Calculation Basis','Leave Accrued (days)','Leave Used (days)','Leave Balance (days)','Leave Pay Basis','Leave Pay','Remaining Loans','EOS Paid','Net Due'];
+    ? ['رقم الموظف','اسم الموظف','تاريخ التعيين','الحالة','تاريخ إنهاء الخدمة','مدة الخدمة (سنة)','نوع الإنهاء','الراتب الأساسي','بدل السكن','بدل النقل','بدلات أخرى','إجمالي الراتب','نهاية الخدمة — صاحب العمل','نهاية الخدمة — استقالة','نهاية الخدمة (نهائي)','أساس احتساب نهاية الخدمة','إجازات مستحقة (يوم)','إجازات مستخدمة (يوم)','رصيد الإجازات (يوم)','أساس بدل الإجازة','بدل الإجازات','السلف المتبقية','المدفوع من نهاية الخدمة','خصم أيام بدون أجر','الصافي المستحق']
+    : ['No.','Employee Name','Hire Date','Status','Service End Date','Years of Service','Termination Type','Basic Salary','Housing','Transport','Other','Total Salary','EOS — Employer basis','EOS — Resignation basis','EOS (Final)','EOS Calculation Basis','Leave Accrued (days)','Leave Used (days)','Leave Balance (days)','Leave Pay Basis','Leave Pay','Remaining Loans','EOS Paid','Unpaid-days Deduction','Net Due'];
   const empRows = state.employees.map(function(e){
     const d = computeEmployeeDerived(e);
     const statusLabel = e.status==='terminated' ? t('status_terminated_emp') : t('status_active_emp');
@@ -2746,7 +2748,7 @@ function exportExcel(){
     const eosEmployerVal = d.isFinal ? '—' : round3(d.eosEmployer);
     const eosResignationVal = d.isFinal ? '—' : round3(d.eosResignation);
     const eosFinalVal = d.isFinal ? round3(d.eos) : '—';
-    return [e.no, e.name, e.hireDate, statusLabel, e.serviceEndDate||'—', round2(d.years), termLabel, e.basic, e.housing, e.transport, e.other, round3(d.currentSalary), eosEmployerVal, eosResignationVal, eosFinalVal, eosBasisLabel, round2(d.leaveAccrued), round2(d.leaveTaken), round2(d.leaveBalance), leaveBasisLabel, round3(d.leavePay), round3(d.loansRemaining), round3(d.eosPaid), round3(d.netDue)];
+    return [e.no, e.name, e.hireDate, statusLabel, e.serviceEndDate||'—', round2(d.years), termLabel, e.basic, e.housing, e.transport, e.other, round3(d.currentSalary), eosEmployerVal, eosResignationVal, eosFinalVal, eosBasisLabel, round2(d.leaveAccrued), round2(d.leaveTaken), round2(d.leaveBalance), leaveBasisLabel, round3(d.leavePay), round3(d.loansRemaining), round3(d.eosPaid), round3(d.leaveUnpaidDeduction), round3(d.netDue)];
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([empHeader].concat(empRows)), 'Employees');
 
