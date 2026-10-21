@@ -419,7 +419,7 @@ html[dir="ltr"] .num{direction:ltr;}
     <p class="waiting-subtitle" id="waitingUserEmail"></p>
     <div class="waiting-steps">
       <div class="waiting-step"><span class="step-num">1</span><span data-i18n="waiting_step1">سجّلت بنجاح — حسابك الآن قيد المراجعة</span></div>
-      <div class="waiting-step"><span class="step-num">2</span><span data-i18n="waiting_step2">سيتم التواصل معك على بريدك لإتمام الدفع وتأكيد الاشتراك</span></div>
+      <div class="waiting-step"><span class="step-num">2</span><span data-i18n="waiting_step2">تواصل معنا عبر واتساب لإتمام الدفع وتأكيد الاشتراك</span></div>
       <div class="waiting-step"><span class="step-num">3</span><span data-i18n="waiting_step3">بعد التأكيد يتم تفعيل حسابك فوراً</span></div>
     </div>
     <div class="waiting-plans" id="waitingPlanCards"></div>
@@ -588,11 +588,11 @@ const TR = {
   err_password_short: {ar:'كلمة المرور يجب أن تكون 6 أحرف على الأقل', en:'Password must be at least 6 characters'},
   err_email_taken: {ar:'هذا البريد مسجل مسبقاً', en:'This email is already registered'},
   err_signup_failed: {ar:'تعذر إنشاء الحساب: ', en:'Could not create account: '},
-  msg_signup_success: {ar:'تم إنشاء الحساب! سجّل دخولك — سيظهر لك رابط الدفع بعد تسجيل الدخول.', en:'Account created! Sign in — you will see subscription details after logging in.'},
+  msg_signup_success: {ar:'تم إنشاء الحساب! سجّل دخولك لعرض تفاصيل الاشتراك والتفعيل عبر واتساب.', en:'Account created! Sign in to see subscription details and activate via WhatsApp.'},
 
   waiting_title: {ar:'حسابك قيد المراجعة', en:'Your account is under review'},
   waiting_step1: {ar:'سجّلت بنجاح — حسابك الآن قيد المراجعة', en:'Signed up successfully — your account is now pending review'},
-  waiting_step2: {ar:'سيتم التواصل معك على بريدك لإتمام الدفع وتأكيد الاشتراك', en:'You will be contacted by email to complete payment and confirm your subscription'},
+  waiting_step2: {ar:'تواصل معنا عبر واتساب لإتمام الدفع وتأكيد الاشتراك', en:'Contact us on WhatsApp to complete payment and confirm your subscription'},
   waiting_step3: {ar:'بعد التأكيد يتم تفعيل حسابك فوراً', en:'Once confirmed, your account is activated immediately'},
   waiting_plan_note: {ar:'الاشتراك السنوي · 49 د.ك/سنة · غير محدود من الموظفين', en:'Annual subscription · 49 KWD/year · Unlimited employees'},
   btn_logout: {ar:'تسجيل الخروج', en:'Sign out'},
@@ -864,6 +864,7 @@ const TR = {
   deleted_employee: {ar:'(موظف محذوف)', en:'(deleted employee)'},
   modal_activate_sub: {ar:'تفعيل مشترك', en:'Activate subscriber'},
   plan_annual_49: {ar:'الاشتراك السنوي · 49 د.ك', en:'Annual subscription · 49 KWD'},
+  plan_annual: {ar:'السنوي', en:'Annual'},
   btn_activate_submit: {ar:'تفعيل الحساب', en:'Activate account'},
   toast_activated: {ar:'تم تفعيل الحساب بنجاح', en:'Account activated successfully'},
   err_activate_failed: {ar:'تعذر التفعيل: ', en:'Activation failed: '},
@@ -2158,7 +2159,8 @@ function renderAdminRows(){
     return;
   }
   tbody.innerHTML = list.map(function(u){
-    const planLabel = { starter:'Starter', business:'Business', unlimited:'Unlimited' }[u.plan] || u.plan || '—';
+    // One plan is sold (annual, 49 KWD); legacy DB values like 'starter' all display as the annual plan
+    const planLabel = t('plan_annual');
     const expired = isExpired(u);
     const expiryDate = computeExpiry(u.approved_at);
     let statusBadge;
