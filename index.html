@@ -190,7 +190,7 @@ tbody tr:last-child td{border-bottom:none;}
 .modal-overlay:not(.show){visibility:hidden;}
 .modal-overlay.show{visibility:visible;}
 .modal-body{padding:20px 22px;}
-.modal-footer{padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+.modal-footer{padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:#fff;z-index:2;}
 .modal-footer .btn-outline{width:auto;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .form-grid .full{grid-column:1/-1;}
@@ -482,7 +482,11 @@ body.drawer-open{overflow:hidden;}
   .toolbar-actions{width:100%;}
   .toolbar-actions .search-input,.toolbar-actions .filter-select{flex:1;}
   .login-screen{align-items:flex-start;padding-top:48px;}
-  .modal-overlay{align-items:flex-start;padding-top:32px;padding-bottom:32px;}
+  .modal-overlay{align-items:flex-end;padding:0;}
+  .modal-box{max-width:none;max-height:94vh;max-height:94dvh;border-radius:16px 16px 0 0;}
+  .modal-header{position:sticky;top:0;background:#fff;z-index:2;}
+  .modal-footer{padding-bottom:max(16px,env(safe-area-inset-bottom));}
+  .modal-footer .btn-primary,.modal-footer .btn-outline{flex:1;}
 }
 </style>
 </head>
@@ -1161,14 +1165,15 @@ function fmtKWD(n){
   const suffix = (typeof currentLang!=='undefined' && currentLang==='en') ? ' KWD' : ' د.ك';
   return '<span class="num">'+(neg?'-':'')+parts[0]+'.'+parts[1]+suffix+'</span>';
 }
-function fmtNum(n,d){ d = (d===undefined)?1:d; return '<span class="num">'+safeNum(n).toFixed(d)+'</span>'; }
+function fmtNum(n,d){ d = (d===undefined)?1:d; const v = safeNum(n); const r = Math.round(v*Math.pow(10,d))/Math.pow(10,d); return '<span class="num">'+(Number.isInteger(r) ? String(r) : r.toFixed(d))+'</span>'; }
 function fmtDate(str){
   if(!str) return '—';
   const d = new Date(str);
   if(isNaN(d)) return escapeHtml(str);
   return '<span class="num">'+d.toLocaleDateString('en-GB')+'</span>';
 }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+/* Local calendar date (YYYY-MM-DD). toISOString() is UTC and returns yesterday between 00:00 and 03:00 in Kuwait. */
+function todayStr(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function nowTimeStr(){ const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function round3(n){ return Math.round(safeNum(n)*1000)/1000; }
 function round2(n){ return Math.round(safeNum(n)*100)/100; }
@@ -1291,7 +1296,8 @@ function calcYears(hireDate, endDate){
   if(!hireDate) return 0;
   const hire = new Date(hireDate);
   if(isNaN(hire)) return 0;
-  const end = endDate ? new Date(endDate) : new Date();
+  // Date-only on both ends so every screen (list, dashboard, drawer, statement) computes the same figure all day
+  const end = new Date(endDate || todayStr());
   if(isNaN(end)) return 0;
   const diffDays = (end - hire)/(1000*60*60*24);
   return diffDays>0 ? diffDays/365.25 : 0;
@@ -1670,6 +1676,9 @@ function switchTab(tab){
   });
   document.querySelectorAll('.tab-panel').forEach(function(p){ p.style.display = (p.id==='tab-'+tab) ? '' : 'none'; });
   renderTabShell(tab);
+  // Keep the active tab visible in the horizontally scrolling strip (phones)
+  const active = document.querySelector('.tab-btn[data-tab="'+tab+'"]');
+  if(active && active.scrollIntoView) active.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
 }
 function renderTabShell(tab){
   if(tab==='dashboard') renderDashboard();
