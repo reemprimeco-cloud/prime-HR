@@ -23,8 +23,8 @@ drop policy if exists "Holidays are managed by the admin" on public.public_holid
 create policy "Holidays are managed by the admin"
   on public.public_holidays for all
   to authenticated
-  using ((auth.jwt() ->> 'email') = 'reem@primekw.net')
-  with check ((auth.jwt() ->> 'email') = 'reem@primekw.net');
+  using (((select auth.jwt()) ->> 'email') = 'reem@primekw.net')
+  with check (((select auth.jwt()) ->> 'email') = 'reem@primekw.net');
 
 -- Seed: fixed holidays 2024-2028 and 2026 Islamic holidays (approx = pending official announcement)
 insert into public.public_holidays (date, name_ar, name_en, approx) values

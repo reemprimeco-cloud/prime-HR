@@ -2,7 +2,7 @@
    - Pages: network-first (always fresh when online), cached copy when offline.
    - Static assets & pinned CDN libraries/fonts: cache-first.
    - Supabase API and anything else: never cached (always live data). */
-const CACHE = 'prime-hr-v1';
+const CACHE = 'prime-hr-v2';
 const SHELL = [
   './',
   './index.html',
@@ -48,8 +48,13 @@ self.addEventListener('fetch', function(event){
   if(req.mode === 'navigate'){
     event.respondWith(
       fetch(req).then(function(res){
-        const copy = res.clone();
-        caches.open(CACHE).then(function(c){ c.put('./index.html', copy); });
+        // Only a successful load of the app itself may become the offline shell (never a 404 or another page)
+        const scope = new URL(self.registration.scope).pathname;
+        const isApp = url.pathname === scope || url.pathname === scope + 'index.html';
+        if(res.ok && isApp){
+          const copy = res.clone();
+          caches.open(CACHE).then(function(c){ c.put('./index.html', copy); });
+        }
         return res;
       }).catch(function(){ return caches.match('./index.html'); })
     );

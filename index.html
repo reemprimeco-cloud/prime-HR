@@ -14,7 +14,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
 :root{
   --navy:#0d2b5e;
@@ -321,6 +320,11 @@ html[dir="ltr"] .num{direction:ltr;}
   *{scroll-behavior:auto;}
 }
 
+/* Account section in settings */
+.acc-sec{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;background:#f8f9fc;}
+.acc-sec h4{margin:0 0 6px;font-size:.88rem;color:var(--navy);}
+.acc-wa{display:flex;align-items:center;justify-content:center;margin-top:10px;text-decoration:none;text-align:center;}
+
 /* Notice bar + holiday manager */
 .notice-bar{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;background:#eef4fd;border:1px solid #cfe0f7;border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;}
 .notice-bar div{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 260px;}
@@ -384,7 +388,7 @@ body.drawer-open{overflow:hidden;}
 .drw-lead .note{font-size:.74rem;color:rgba(255,255,255,.72);margin-top:8px;}
 .drw-switch{display:inline-flex;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:3px;gap:3px;}
 .drw-switch button{border:none;background:none;color:rgba(255,255,255,.82);font:inherit;font-size:.8rem;font-weight:700;padding:8px 14px;min-height:36px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s;}
-.drw-switch button[aria-checked="true"]{background:#fff;color:var(--navy);}
+.drw-switch button[aria-pressed="true"]{background:#fff;color:var(--navy);}
 .drw-switch button:focus-visible{box-shadow:0 0 0 3px rgba(255,255,255,.55);}
 .drw-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
 .drw-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
@@ -487,6 +491,7 @@ body.drawer-open{overflow:hidden;}
   .modal-header{position:sticky;top:0;background:#fff;z-index:2;}
   .modal-footer{padding-bottom:max(16px,env(safe-area-inset-bottom));}
   .modal-footer .btn-primary,.modal-footer .btn-outline{flex:1;}
+  body:has(.modal-overlay.show) .toast-container{bottom:calc(100px + env(safe-area-inset-bottom));}
 }
 </style>
 </head>
@@ -680,6 +685,7 @@ body.drawer-open{overflow:hidden;}
 
 <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <script>
 /* ============ Supabase client & auth ============ */
 const SUPABASE_URL = 'https://aqvsthtevskvpfqeceny.supabase.co';
@@ -687,6 +693,8 @@ const SUPABASE_KEY = 'sb_publishable_49RpfYoLoWWwKePqNzO6VQ_TEGhj8fo';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_EMAIL = 'reem@primekw.net';
 let currentCompanyName = '';
+let hasOpeningLeaveCols = false;
+let currentSubscription = null, currentUserEmail = '';
 
 /* ── إعدادات الاشتراك ── */
 const PAYMENT_CONFIG = {
@@ -896,17 +904,17 @@ const TR = {
   col_paid_unpaid: {ar:'مدفوع / غير مدفوع', en:'Paid / Unpaid'},
   leave_preview_holidays: {ar:'عطل رسمية مستثناة', en:'Official holidays excluded'},
   recalc_banner_title: {ar:'إجازات محسوبة بالطريقة القديمة', en:'Leave recorded with the old day count'},
-  recalc_banner_text: {ar:'يوجد {n} سجل إجازة احتُسب بالأيام التقويمية. إعادة الاحتساب تستبعد الجمعة والسبت والعطل الرسمية وتعيد توزيع المدفوع وغير المدفوع.', en:'{n} leave records were counted in calendar days. Recalculating excludes Fridays, Saturdays and official holidays and re-splits paid/unpaid days.'},
+  recalc_banner_text: {ar:'يوجد {n} سجل إجازة احتُسبت أيامه قبل استبعاد الجمعة والسبت أو العطل الرسمية. إعادة الاحتساب تعيد الأيام المحسوبة بالخطأ إلى رصيد الموظف.', en:'{n} leave records were counted before Fridays, Saturdays or official holidays were excluded. Recalculating returns the wrongly counted days to the employee\u2019s balance.'},
   recalc_title: {ar:'إعادة احتساب الإجازات', en:'Recalculate leave'},
   recalc_btn: {ar:'إعادة الاحتساب', en:'Recalculate'},
-  recalc_confirm: {ar:'سيتم تحديث {n} سجل إجازة.\nمجموع الأيام: {before} يوم ← {after} يوم عمل.\nيُعاد توزيع الأيام المدفوعة وبدون أجر حسب الرصيد.', en:'{n} leave records will be updated.\nTotal days: {before} → {after} working days.\nPaid and unpaid days are re-split against the balance.'},
+  recalc_confirm: {ar:'سيتم تحديث {n} سجل إجازة.\nمجموع الأيام: {before} يوم ← {after} يوم عمل.\nيعود {freed} يوم مدفوع إلى رصيد الموظفين. الأيام بدون أجر لا تزيد ولا تتحول إلى مدفوعة لأنها خُصمت من الراتب.', en:'{n} leave records will be updated.\nTotal days: {before} → {after} working days.\n{freed} paid days return to employees\u2019 balances. Unpaid days never increase or turn into paid days, as they were already deducted from salary.'},
   recalc_skipped: {ar:'{n} سجل عُدّلت أيامه يدوياً سابقاً: يبقى عدد أيامه كما هو.', en:'{n} records with manually edited days keep their day count.'},
   recalc_nothing: {ar:'لا توجد سجلات تحتاج إعادة احتساب', en:'No records need recalculating'},
   recalc_done: {ar:'تمت إعادة احتساب {n} سجل', en:'{n} records recalculated'},
   recalc_partial: {ar:'تعذر تحديث {n} سجل. حاول مرة أخرى.', en:'{n} records could not be updated. Please try again.'},
   hol_title: {ar:'العطل الرسمية', en:'Official holidays'},
   hol_builtin_title: {ar:'القائمة المدمجة مفعّلة', en:'Built-in list in use'},
-  hol_builtin_text: {ar:'لتعديل العطل من هنا، نفّذ ملف الترحيل supabase/migrations/20261021_public_holidays.sql مرة واحدة في Supabase.', en:'To edit holidays here, run supabase/migrations/20261021_public_holidays.sql once in Supabase.'},
+  hol_builtin_text: {ar:'العطل الحالية من القائمة المدمجة في البرنامج ولا يمكن تعديلها من هنا بعد. تواصل مع الدعم الفني لتفعيل التعديل.', en:'Holidays currently come from the app\u2019s built-in list and cannot be edited here yet. Contact support to enable editing.'},
   hol_date: {ar:'التاريخ', en:'Date'},
   hol_name: {ar:'المناسبة', en:'Occasion'},
   hol_name_ar: {ar:'الاسم بالعربي', en:'Arabic name'},
@@ -941,6 +949,21 @@ const TR = {
   btn_end_service: {ar:'إنهاء الخدمة', en:'End service'},
   btn_reactivate: {ar:'إعادة تفعيل', en:'Reactivate'},
   btn_close: {ar:'إغلاق', en:'Close'},
+  err_number_invalid: {ar:'أدخل رقماً صحيحاً (مثال: 450 أو 450.500)', en:'Enter a valid number (e.g. 450 or 450.500)'},
+  err_number_negative: {ar:'لا يمكن أن تكون القيمة سالبة', en:'The value cannot be negative'},
+  err_opening_date: {ar:'حدد تاريخ الرصيد الافتتاحي', en:'Set the opening balance date'},
+  err_opening_before_hire: {ar:'تاريخ الرصيد الافتتاحي قبل تاريخ التعيين', en:'Opening balance date is before the hire date'},
+  opening_title: {ar:'رصيد إجازات افتتاحي (عند النقل من نظام آخر)', en:'Opening leave balance (when moving from another system)'},
+  opening_balance: {ar:'الرصيد الافتتاحي (يوم)', en:'Opening balance (days)'},
+  opening_date: {ar:'بتاريخ', en:'As of'},
+  opening_hint: {ar:'رصيد الموظف المتبقي في هذا التاريخ. يُستكمل الاحتساب منه بمعدل 30 يوم عمل في السنة، ولا تُخصم منه الإجازات المسجّلة قبل هذا التاريخ.', en:'The employee\u2019s remaining balance on this date. Accrual continues from it at 30 working days a year; leave recorded before this date is not deducted again.'},
+  leave_preview_hol_missing: {ar:'⚠ عطل الأعياد لسنة {y} غير مسجّلة بعد، فقد تُحسب أيام العيد ضمن الإجازة. عدّل عدد الأيام يدوياً إن لزم.', en:'⚠ Eid holidays for {y} are not in the list yet, so Eid days may be counted as leave. Adjust the day count if needed.'},
+  acc_title: {ar:'الحساب والاشتراك', en:'Account & subscription'},
+  acc_company: {ar:'الشركة', en:'Company'},
+  acc_expiry: {ar:'ينتهي الاشتراك في', en:'Subscription ends'},
+  acc_days_left: {ar:'متبقي {n} يوم', en:'{n} days left'},
+  acc_support: {ar:'الدعم والتجديد عبر واتساب', en:'Support & renewal on WhatsApp'},
+  acc_wa_text: {ar:'مرحباً، لدي استفسار بخصوص نظام Prime HR', en:'Hello, I have a question about Prime HR'},
   drw_view: {ar:'عرض تفاصيل الموظف', en:'View employee details'},
   drw_no: {ar:'رقم', en:'No.'},
   drw_since: {ar:'منذ', en:'since'},
@@ -1149,7 +1172,25 @@ function normalizeDigits(str){
     .replace(/[\u06F0-\u06F9]/g, function(d){ return String(d.charCodeAt(0)-0x06F0); })
     .replace(/\u066B/g, '.').replace(/[\u066C\u060C]/g, ',');
 }
-function safeNum(v){ const n = parseFloat(normalizeDigits(v===undefined||v===null?'':v).replace(/,/g,'')); return isNaN(n)?0:n; }
+function parseAmount(v){
+  if(v===undefined||v===null) return NaN;
+  if(typeof v === 'number') return v;
+  const s = normalizeDigits(v).replace(/[\s\u00A0,]/g,'');
+  if(s === '') return NaN;
+  return /^-?(\d+\.?\d*|\.\d+)$/.test(s) ? parseFloat(s) : NaN;
+}
+function safeNum(v){ const n = parseAmount(v); return isNaN(n)?0:n; }
+/* Validate a numeric form field; shows an inline error and returns null when invalid */
+function numField(form, name, opts){
+  opts = opts || {};
+  const raw = (form.elements[name] && form.elements[name].value || '').trim();
+  if(raw === '' && !opts.required) return 0;
+  const n = parseAmount(raw);
+  if(isNaN(n)){ fieldError(form, name, t('err_number_invalid')); return null; }
+  if(opts.positive && n <= 0){ fieldError(form, name, t('err_amount_positive')); return null; }
+  if(n < 0){ fieldError(form, name, t('err_number_negative')); return null; }
+  return n;
+}
 function escapeHtml(str){
   if(str===undefined||str===null) return '';
   return String(str).replace(/[&<>"']/g, function(c){
@@ -1157,7 +1198,7 @@ function escapeHtml(str){
   });
 }
 function fmtKWD(n){
-  n = safeNum(n);
+  n = round3(n);
   const neg = n<0; n = Math.abs(n);
   let s = n.toFixed(3);
   let parts = s.split('.');
@@ -1168,6 +1209,8 @@ function fmtKWD(n){
 function fmtNum(n,d){ d = (d===undefined)?1:d; const v = safeNum(n); const r = Math.round(v*Math.pow(10,d))/Math.pow(10,d); return '<span class="num">'+(Number.isInteger(r) ? String(r) : r.toFixed(d))+'</span>'; }
 function fmtDate(str){
   if(!str) return '—';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(str));
+  if(m) return '<span class="num">'+m[3]+'/'+m[2]+'/'+m[1]+'</span>';   // no timezone shift
   const d = new Date(str);
   if(isNaN(d)) return escapeHtml(str);
   return '<span class="num">'+d.toLocaleDateString('en-GB')+'</span>';
@@ -1250,7 +1293,7 @@ function updateLeaveDays(){
   const d = document.querySelector('#leaveForm input[name="days"]');
   if(!f||!t||!d) return;
   const n = daysBetween(f.value, t.value);
-  if(n>0) d.value = n;
+  if(f.value && t.value) d.value = n;
   updateLeavePreview();
 }
 function updateLeavePreview(){
@@ -1275,6 +1318,11 @@ function updateLeavePreview(){
   let html = '';
   if(cal && cal !== days) html += '<div class="leave-preview-row"><span>'+t('leave_preview_working')+'</span><b>'+fmtNum(days,0)+' / '+fmtNum(cal,0)+' '+t('day_suffix')+'</b></div>';
   const hol = (form.dateFrom.value && form.dateTo.value) ? holidaysInRange(form.dateFrom.value, form.dateTo.value) : [];
+  if(form.dateFrom.value && form.dateTo.value){
+    const years = []; for(let y = +form.dateFrom.value.slice(0,4); y <= +form.dateTo.value.slice(0,4); y++) years.push(y);
+    const missing = years.filter(function(y){ return !holidays.some(function(h){ return h.date.slice(0,4)===String(y) && !/-0(1-01|2-2[56])$/.test(h.date); }); });
+    if(missing.length) html += '<div class="leave-preview-warning">'+t('leave_preview_hol_missing').replace('{y}', missing.join('، '))+'</div>';
+  }
   if(hol.length) html += '<div class="leave-preview-holidays">'+t('leave_preview_holidays')+': '+hol.map(function(h){ return escapeHtml(currentLang==='en'?h.en:h.ar)+' ('+fmtDate(h.date)+')'; }).join('، ')+'</div>';
   html += '<div class="leave-preview-row"><span>'+t('leave_preview_available')+'</span><b>'+fmtNum(available,1)+' '+t('day_suffix')+'</b></div>';
   html += '<div class="leave-preview-row"><span>'+t('leave_preview_paid')+'</span><b class="text-positive">'+fmtNum(paidDays,1)+' '+t('day_suffix')+'</b></div>';
@@ -1366,10 +1414,10 @@ function computeEmployeeDerived(emp){
   const leavePayBasis = emp.leavePayBasis === 'basic' ? emp.basic : currentSalary;
   const dailyRate = leavePayBasis / 30;
   // Leave: 2.5 days accrued per month worked (30 days/year — Kuwait Labor Law Art. 70)
-  const leaveAccrued = round2(years * 30);
+  const leaveAccrued = leaveAccruedFor(emp, asOfDate);
   const empLeaveRecords = state.leaveRecords.filter(function(r){ return r.employeeId===emp.id; });
   // Only PAID days reduce the accrued balance — unpaid days are absence beyond entitlement, tracked separately.
-  const leaveTaken = empLeaveRecords.reduce(function(s,r){ return s+safeNum(r.paidDays!=null?r.paidDays:r.days); }, 0);
+  const leaveTaken = empLeaveRecords.filter(function(r){ return countsTowardBalance(emp, r); }).reduce(function(s,r){ return s+safeNum(r.paidDays!=null?r.paidDays:r.days); }, 0);
   const leaveUnpaidDays = empLeaveRecords.reduce(function(s,r){ return s+safeNum(r.unpaidDays||0); }, 0);
   const leaveUnpaidDeduction = round3(dailyRate * leaveUnpaidDays);
   const leaveBalance = Math.max(0, leaveAccrued - leaveTaken);
@@ -1389,14 +1437,23 @@ function empName(id){
   return e ? e.name : t('deleted_employee');
 }
 
+/* Leave accrual: 30 working days/year from the hire date, or from an opening balance set when moving from another system */
+function leaveAccruedFor(emp, asOf){
+  if(emp.leaveOpeningBalance!=null && emp.leaveOpeningDate){
+    return round2(emp.leaveOpeningBalance + calcYears(emp.leaveOpeningDate, asOf) * 30);
+  }
+  return round2(calcYears(emp.hireDate, asOf) * 30);
+}
+function countsTowardBalance(emp, r){
+  return !(emp.leaveOpeningBalance!=null && emp.leaveOpeningDate && r.dateFrom && r.dateFrom < emp.leaveOpeningDate);
+}
 /* Available leave balance for an employee EXCLUDING a specific record (used when editing that record) */
 function leaveBalanceExcluding(empId, excludeRecordId){
   const emp = state.employees.find(function(e){ return e.id===empId; });
   if(!emp) return 0;
-  const years = calcYears(emp.hireDate, emp.status==='terminated' ? emp.serviceEndDate : null);
-  const accrued = round2(years * 30);
+  const accrued = leaveAccruedFor(emp, emp.status==='terminated' ? emp.serviceEndDate : null);
   const taken = state.leaveRecords
-    .filter(function(r){ return r.employeeId===empId && r.id!==excludeRecordId; })
+    .filter(function(r){ return r.employeeId===empId && r.id!==excludeRecordId && countsTowardBalance(emp, r); })
     .reduce(function(s,r){ return s+safeNum(r.paidDays!=null?r.paidDays:r.days); }, 0);
   return Math.max(0, accrued - taken);
 }
@@ -1410,6 +1467,8 @@ function mapEmployeeFromDb(r){
   return { id:r.id, no:r.no, name:r.name, hireDate:r.hire_date, basic:Number(r.basic), housing:Number(r.housing),
     transport:Number(r.transport), other:Number(r.other),
     status: r.status || 'active',
+    leaveOpeningBalance: r.leave_opening_balance!=null ? Number(r.leave_opening_balance) : null,
+    leaveOpeningDate: r.leave_opening_date || null,
     serviceEndDate: r.service_end_date || null,
     terminationType: r.termination_type || null,
     leavePayBasis: r.leave_pay_basis || 'full',
@@ -1434,10 +1493,15 @@ function setSyncStatus(ok, msg){
   if(dot) dot.classList.toggle('error', !ok);
   if(status) status.textContent = msg || (ok ? t('sync_connected')+nowTimeStr() : t('sync_error'));
   if(typeof drawerState!=='undefined') refreshDrawer();
+  // After a successful save, re-render the visible tab so lists never disagree with the drawer
+  if(ok && !msg && typeof uiState!=='undefined' && uiState.activeTab !== 'admin' && document.getElementById('appRoot').style.display !== 'none'){
+    renderTabShell(uiState.activeTab);
+  }
 }
 
 async function loadDataFromSupabase(){
   const holidaysLoad = loadHolidays();
+  const openingProbe = sb.from('employees').select('leave_opening_balance').limit(1).then(function(r){ hasOpeningLeaveCols = !r.error; }, function(){ hasOpeningLeaveCols = false; });
   const [empRes, loanRes, eosRes, leaveRes] = await Promise.all([
     sb.from('employees').select('*').order('no'),
     sb.from('loans').select('*'),
@@ -1455,7 +1519,7 @@ async function loadDataFromSupabase(){
   state.loans = loanRes.data.map(mapLoanFromDb);
   state.eosPayments = eosRes.data.map(mapEosFromDb);
   state.leaveRecords = leaveRes.data.map(mapLeaveFromDb);
-  await holidaysLoad;
+  await holidaysLoad; await openingProbe;
   state.nextEmployeeNo = state.employees.reduce(function(m,e){ return Math.max(m, e.no); }, 0) + 1;
   setSyncStatus(true);
   return true;
@@ -1479,7 +1543,16 @@ function toast(msg, type){
 }
 
 /* ============ Modal ============ */
-let modalReturnFocus = null;
+let modalReturnFocus = null, modalReturnAction = null;
+/* Focus an element, or — if a re-render detached it — its replacement inside the drawer (same data-action), else the drawer title */
+function restoreFocus(el, action){
+  if(el && document.contains(el)){ el.focus({preventScroll:true}); return; }
+  if(drawerState.empId){
+    const twin = action ? document.querySelector('#empDrawer [data-action="'+action+'"]') : null;
+    const target = twin || document.getElementById('drwTitle');
+    if(target) target.focus({preventScroll:true});
+  }
+}
 function linkFieldLabels(root){
   root.querySelectorAll('.field').forEach(function(f, i){
     const label = f.querySelector('label');
@@ -1492,6 +1565,7 @@ function linkFieldLabels(root){
 function openModal(html){
   const box = document.getElementById('modalBox');
   modalReturnFocus = document.activeElement;
+  modalReturnAction = modalReturnFocus && modalReturnFocus.dataset ? modalReturnFocus.dataset.action : null;
   box.innerHTML = html;
   const title = box.querySelector('.modal-header h3');
   if(title){ title.id = 'modalTitle'; box.setAttribute('aria-labelledby','modalTitle'); }
@@ -1505,8 +1579,8 @@ function openModal(html){
 function closeModal(){
   document.getElementById('modalOverlay').classList.remove('show');
   refreshDrawer();
-  if(modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus({preventScroll:true});
-  modalReturnFocus = null;
+  restoreFocus(modalReturnFocus, modalReturnAction);
+  modalReturnFocus = null; modalReturnAction = null;
 }
 document.addEventListener('keydown', function(e){
   const overlay = document.getElementById('modalOverlay');
@@ -1565,6 +1639,7 @@ function confirmAction(opts){
     const overlay = document.getElementById('confirmOverlay');
     const box = document.getElementById('confirmBox');
     const prevFocus = document.activeElement;
+    const prevAction = prevFocus && prevFocus.dataset ? prevFocus.dataset.action : null;
     const word = t('confirm_type_word');
     box.innerHTML =
       '<div class="modal-header"><h2 id="confirmTitle">'+escapeHtml(opts.title || t('confirm_title'))+'</h2></div>'+
@@ -1586,8 +1661,8 @@ function confirmAction(opts){
       overlay.classList.remove('show');
       overlay.removeEventListener('click', onClick);
       document.removeEventListener('keydown', onKey, true);
-      if(prevFocus && document.contains(prevFocus)) prevFocus.focus({preventScroll:true});
       resolve(v);
+      setTimeout(function(){ if(!document.getElementById('modalOverlay').classList.contains('show')) restoreFocus(prevFocus, prevAction); }, 0);
     }
     function onClick(e){
       if(e.target === overlay) return done(false);
@@ -1741,7 +1816,7 @@ function renderEmployeesShell(){
   let html = '';
   html += '<div class="section-toolbar"><h2>'+t('emp_title')+' <span style="color:var(--text-muted);font-weight:600;font-size:.85rem">('+state.employees.length+')</span></h2>';
   html += '<div class="toolbar-actions">';
-  html += '<input type="text" class="search-input" id="employeeSearch" placeholder="'+t('emp_search_placeholder')+'" value="'+escapeHtml(uiState.employeeSearch)+'">';
+  html += '<input type="text" class="search-input" id="employeeSearch" aria-label="'+t('emp_search_placeholder')+'" placeholder="'+t('emp_search_placeholder')+'" value="'+escapeHtml(uiState.employeeSearch)+'">';
   html += '<button class="btn-primary" data-action="open-add-employee">'+t('btn_add_employee')+'</button>';
   html += '</div></div>';
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
@@ -1833,6 +1908,11 @@ function employeeModalHtml(emp){
         '<div class="field full"><label>'+t('field_raise_pct')+'</label><input type="text" inputmode="decimal" name="raisePct" value="'+emp.raisePct+'">'+
           '<div class="hint">'+t('hint_raise')+'</div></div>'+
       '</div></details>'+
+      (hasOpeningLeaveCols ? '<details class="advanced full"'+(emp.leaveOpeningBalance!=null?' open':'')+'><summary>'+t('opening_title')+'</summary><div class="form-grid">'+
+        '<div class="field"><label>'+t('opening_balance')+'</label><input type="text" inputmode="decimal" name="leaveOpeningBalance" value="'+(emp.leaveOpeningBalance!=null?emp.leaveOpeningBalance:'')+'"></div>'+
+        '<div class="field"><label>'+t('opening_date')+'</label><input type="date" name="leaveOpeningDate" value="'+(emp.leaveOpeningDate||'')+'"></div>'+
+        '<div class="hint full">'+t('opening_hint')+'</div>'+
+      '</div></details>' : '')+
     '</div></div>'+
     '<div class="modal-footer"><button type="button" class="btn-outline" data-action="close-modal" style="width:auto">'+t('btn_cancel')+'</button>'+
       '<button type="submit" class="btn-primary">'+(editing?t('btn_save_changes'):t('btn_add_employee_submit'))+'</button></div>'+
@@ -1862,6 +1942,19 @@ async function handleEmployeeSubmit(form){
   };
   if(!data.name){ fieldError(form,'name',t('err_name_required')); return; }
   if(!data.hireDate){ fieldError(form,'hireDate',t('err_hiredate_required')); return; }
+  for(const f of [['basic',{required:true,positive:true}],['housing'],['transport'],['other'],['raisePct']]){
+    const v = numField(form, f[0], f[1]); if(v===null) return; data[f[0]] = v;
+  }
+  if(hasOpeningLeaveCols){
+    const ob = numField(form, 'leaveOpeningBalance');
+    if(ob===null) return;
+    const obRaw = (form.leaveOpeningBalance.value||'').trim();
+    const obDate = form.leaveOpeningDate.value;
+    if(obRaw!=='' && !obDate){ fieldError(form,'leaveOpeningDate',t('err_opening_date')); return; }
+    if(obDate && data.hireDate && obDate < data.hireDate){ fieldError(form,'leaveOpeningDate',t('err_opening_before_hire')); return; }
+    data.leaveOpeningBalance = obRaw==='' ? null : ob;
+    data.leaveOpeningDate = obRaw==='' ? null : obDate;
+  }
   const dbRow = {
     name: data.name, hire_date: data.hireDate, basic: data.basic, housing: data.housing,
     transport: data.transport, other: data.other,
@@ -1869,6 +1962,7 @@ async function handleEmployeeSubmit(form){
     eos_pay_basis: data.eosPayBasis,
     raise_applied: data.raiseApplied, raise_pct: data.raisePct, updated_at: new Date().toISOString()
   };
+  if(hasOpeningLeaveCols){ dbRow.leave_opening_balance = data.leaveOpeningBalance; dbRow.leave_opening_date = data.leaveOpeningDate; }
   if(id){
     const { error } = await sb.from('employees').update(dbRow).eq('id', id);
     if(error){ toast(t('err_save_failed')+friendlyErr(error), 'error'); return; }
@@ -1928,7 +2022,7 @@ function endServiceModalHtml(emp){
           '</select>'+
           '<div class="hint">'+t('hint_termination')+'</div></div>'+
       '</div>'+
-      '<div class="settle" id="endServicePreview" aria-live="polite"></div>'+
+      '<div class="settle" id="endServicePreview"></div>'+
     '</div>'+
     '<div class="modal-footer"><button type="button" class="btn-outline" data-action="close-modal">'+t('btn_cancel')+'</button>'+
       '<button type="submit" class="btn-primary" style="background:var(--red);border-color:var(--red)">'+t('btn_confirm_end_service')+'</button></div>'+
@@ -2021,9 +2115,9 @@ function renderDrawer(){
     '<div class="value">'+fmtKWD(d.netDue)+'</div>'+
     (isTerm
       ? '<div class="note">'+t('drw_final_on')+' '+fmtDate(emp.serviceEndDate)+'</div>'
-      : '<div class="drw-switch" role="radiogroup" aria-label="'+t('drw_scenario')+'">'+
-          '<button type="button" role="radio" aria-checked="'+(drawerState.scenario==='employer')+'" data-action="drw-scenario" data-sc="employer">'+t('drw_sc_employer')+'</button>'+
-          '<button type="button" role="radio" aria-checked="'+(drawerState.scenario==='resignation')+'" data-action="drw-scenario" data-sc="resignation">'+t('drw_sc_resign')+'</button>'+
+      : '<div class="drw-switch" role="group" aria-label="'+t('drw_scenario')+'">'+
+          '<button type="button" aria-pressed="'+(drawerState.scenario==='employer')+'" data-action="drw-scenario" data-sc="employer">'+t('drw_sc_employer')+'</button>'+
+          '<button type="button" aria-pressed="'+(drawerState.scenario==='resignation')+'" data-action="drw-scenario" data-sc="resignation">'+t('drw_sc_resign')+'</button>'+
         '</div><div class="note">'+t('drw_as_of_today')+'</div>')+
   '</div>';
   h += drawerSection(t('drw_breakdown'), '<div class="settle">'+settlementRowsHtml(emp, st)+'</div>');
@@ -2031,7 +2125,8 @@ function renderDrawer(){
     kv(t('drw_basic'), fmtKWD(emp.basic))+kv(t('drw_housing'), fmtKWD(emp.housing))+kv(t('drw_transport'), fmtKWD(emp.transport))+kv(t('drw_other'), fmtKWD(emp.other))+
     kv(t('drw_total'), fmtKWD(live.currentSalary), 'settle-strong')+
     '<div class="drw-note">'+t('drw_eos_basis')+': '+(emp.eosPayBasis==='basic'?t('eos_preview_basis_basic'):t('eos_preview_basis_full'))+' · '+t('drw_leave_basis')+': '+(emp.leavePayBasis==='basic'?t('eos_preview_basis_basic'):t('eos_preview_basis_full'))+'</div>');
-  let leaveBody = kv(t('drw_leave_accrued'), numSpan(fmtNum(d.leaveAccrued,1))+' '+t('eos_preview_days'))+
+  let leaveBody = (emp.leaveOpeningBalance!=null && emp.leaveOpeningDate ? kv(t('opening_balance')+' ('+fmtDate(emp.leaveOpeningDate)+')', numSpan(fmtNum(emp.leaveOpeningBalance,1))+' '+t('eos_preview_days')) : '')+
+    kv(t('drw_leave_accrued'), numSpan(fmtNum(d.leaveAccrued,1))+' '+t('eos_preview_days'))+
     kv(t('drw_leave_taken'), numSpan(fmtNum(d.leaveTaken,1))+' '+t('eos_preview_days'))+
     kv(t('drw_leave_balance'), numSpan(fmtNum(d.leaveBalance,1))+' '+t('eos_preview_days'), 'settle-strong')+
     (d.leaveUnpaidDays ? kv(t('drw_leave_unpaid'), numSpan(fmtNum(d.leaveUnpaidDays,1))+' '+t('eos_preview_days'))+kv(t('drw_leave_deduction'), '− '+fmtKWD(d.leaveUnpaidDeduction)) : '');
@@ -2081,7 +2176,7 @@ function closeDrawer(){
 window.addEventListener('popstate', function(){ if(drawerState.empId){ drawerState.pushed = false; hideDrawer(); } });
 function refreshDrawer(){ if(drawerState.empId) renderDrawer(); }
 function drawerQuickAdd(kind, id){
-  if(kind==='leave'){ uiState.leaveFilterEmp = id; openAddLeave(); }
+  if(kind==='leave'){ const prev = uiState.leaveFilterEmp; uiState.leaveFilterEmp = id; openAddLeave(); uiState.leaveFilterEmp = prev; }
   else if(kind==='loan'){ openAddLoan(); }
   else { openAddEos(); }
   const sel = document.querySelector('#modalBox select[name=employeeId]');
@@ -2128,7 +2223,7 @@ function printSettlement(id){
 }
 window.addEventListener('afterprint', function(){
   document.getElementById('printSheet').innerHTML = '';
-  document.title = 'نظام برايم للموارد البشرية | Prime HR';
+  document.title = currentLang==='en' ? 'Prime HR' : 'نظام برايم للموارد البشرية | Prime HR';
 });
 
 function openEndServiceModal(id){
@@ -2187,12 +2282,12 @@ function renderLoansShell(){
   const paidCount = state.loans.length - unpaidCount;
   let html = '';
   html += '<div class="section-toolbar"><h2>'+t('loans_title')+'</h2><div class="toolbar-actions">';
-  html += '<select class="filter-select" id="loanFilterEmp">'+opts+'</select>';
+  html += '<select class="filter-select" id="loanFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>';
   html += '<button class="btn-primary" data-action="open-add-loan">'+t('btn_add_record')+'</button></div></div>';
   html += '<div class="toolbar-actions" style="margin-bottom:14px;gap:6px">';
-  html += '<button class="btn-outline" style="'+(uiState.loanFilterStatus==='unpaid'?'background:var(--navy);color:#fff;':'')+'padding:8px 14px;width:auto" data-lf="unpaid">'+t('loans_filter_unpaid')+' ('+unpaidCount+')</button>';
-  html += '<button class="btn-outline" style="'+(uiState.loanFilterStatus==='paid'?'background:var(--green);color:#fff;border-color:var(--green);':'')+'padding:8px 14px;width:auto" data-lf="paid">'+t('loans_filter_paid')+' ('+paidCount+')</button>';
-  html += '<button class="btn-outline" style="'+(uiState.loanFilterStatus==='all'?'background:var(--navy);color:#fff;':'')+'padding:8px 14px;width:auto" data-lf="all">'+t('admin_filter_all')+' ('+state.loans.length+')</button>';
+  html += '<button class="btn-outline" aria-pressed="'+(uiState.loanFilterStatus==='unpaid')+'" style="'+(uiState.loanFilterStatus==='unpaid'?'background:var(--navy);color:#fff;':'')+'padding:8px 14px;width:auto" data-lf="unpaid">'+t('loans_filter_unpaid')+' ('+unpaidCount+')</button>';
+  html += '<button class="btn-outline" aria-pressed="'+(uiState.loanFilterStatus==='paid')+'" style="'+(uiState.loanFilterStatus==='paid'?'background:var(--green);color:#fff;border-color:var(--green);':'')+'padding:8px 14px;width:auto" data-lf="paid">'+t('loans_filter_paid')+' ('+paidCount+')</button>';
+  html += '<button class="btn-outline" aria-pressed="'+(uiState.loanFilterStatus==='all')+'" style="'+(uiState.loanFilterStatus==='all'?'background:var(--navy);color:#fff;':'')+'padding:8px 14px;width:auto" data-lf="all">'+t('admin_filter_all')+' ('+state.loans.length+')</button>';
   html += '</div>';
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
   html += '<thead><tr><th>'+t('col_date')+'</th><th>'+t('col_employee')+'</th><th>'+t('col_type')+'</th><th>'+t('col_description')+'</th><th>'+t('col_original')+'</th><th>'+t('col_deducted')+'</th><th>'+t('col_remaining')+'</th><th>'+t('col_actions')+'</th></tr></thead>';
@@ -2289,7 +2384,8 @@ async function handleLoanSubmit(form){
     notes: (fd.get('notes')||'').trim()
   };
   if(!data.employeeId){ fieldError(form,'employeeId',t('err_select_employee')); return; }
-  if(data.original<=0){ fieldError(form,'original',t('err_amount_positive')); return; }
+  { const o = numField(form,'original',{required:true,positive:true}); if(o===null) return; data.original = o;
+    const dd = numField(form,'deducted'); if(dd===null) return; data.deducted = dd; }
   if(data.deducted > data.original + 0.0005){ fieldError(form,'deducted',t('err_deducted_exceeds')); return; }
   const dbRow = {
     employee_id: data.employeeId, date: data.date, type: data.type,
@@ -2351,7 +2447,7 @@ async function handleLoanPaymentSubmit(form){
   const amount = safeNum(fd.get('amount'));
   const loan = state.loans.find(function(l){ return l.id===loanId; });
   if(!loan) return;
-  if(amount<=0){ fieldError(form,'amount',t('err_amount_positive')); return; }
+  if(numField(form,'amount',{required:true,positive:true})===null) return;
   const remaining = round3(safeNum(loan.original) - safeNum(loan.deducted));
   if(amount > remaining + 0.001){ fieldError(form,'amount',t('err_amount_exceeds_remaining')); return; }
   const newDeducted = round3(safeNum(loan.deducted) + amount);
@@ -2377,7 +2473,7 @@ function renderEosShell(){
   }).join('');
   let html = '';
   html += '<div class="section-toolbar"><h2>'+t('eos_title')+'</h2><div class="toolbar-actions">';
-  html += '<select class="filter-select" id="eosFilterEmp">'+opts+'</select>';
+  html += '<select class="filter-select" id="eosFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>';
   html += '<button class="btn-primary" data-action="open-add-eos">'+t('btn_add_payment')+'</button></div></div>';
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
   html += '<thead><tr><th>'+t('col_date')+'</th><th>'+t('col_employee')+'</th><th>'+t('col_month')+'</th><th>'+t('col_paid_amount')+'</th><th>'+t('col_notes')+'</th><th>'+t('col_actions')+'</th></tr></thead>';
@@ -2448,7 +2544,7 @@ async function handleEosSubmit(form){
     notes: (fd.get('notes')||'').trim()
   };
   if(!data.employeeId){ fieldError(form,'employeeId',t('err_select_employee')); return; }
-  if(data.paid<=0){ fieldError(form,'paid',t('err_amount_positive')); return; }
+  { const pd = numField(form,'paid',{required:true,positive:true}); if(pd===null) return; data.paid = pd; }
   const dbRow = { employee_id: data.employeeId, date: data.date, month: data.month, paid: data.paid, notes: data.notes };
   if(id){
     const { error } = await sb.from('eos_payments').update(dbRow).eq('id', id);
@@ -2491,7 +2587,7 @@ function renderLeaveShell(){
 
   let html = '';
   html += '<div class="section-toolbar"><h2>'+t('leave_title')+'</h2><div class="toolbar-actions">';
-  html += '<select class="filter-select" id="leaveFilterEmp">'+opts+'</select>';
+  html += '<select class="filter-select" id="leaveFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>';
   html += '<button class="btn-primary" data-action="open-add-leave">'+t('btn_add_leave')+'</button></div></div>';
 
   // Per-employee summary when one is selected
@@ -2639,43 +2735,40 @@ async function handleLeaveSubmit(form){
    A record is migrated only if its stored days equal the plain calendar count (i.e. it was auto-calculated);
    records whose days were edited by hand are left untouched. Paid/unpaid is then re-split per employee in
    date order against the current balance, the same rule used when saving a leave. */
+/* Recalculate leave records saved before working-day counting (or before a holiday was added).
+   A record counts as auto-calculated if its stored days equal the calendar count or the weekend-only count;
+   records with hand-edited day counts are left untouched. Unpaid days were already deducted from salary,
+   so they are never increased and never turned into paid days: only wrongly-counted paid days are returned. */
+function weekendOnlyDays(dateFrom, dateTo){
+  const d1 = new Date(dateFrom), d2 = new Date(dateTo);
+  if(isNaN(d1)||isNaN(d2)||d2<d1) return 0;
+  let n = 0;
+  for(const d = new Date(d1); d <= d2; d.setUTCDate(d.getUTCDate()+1)){ if(WEEKLY_REST_DAYS.indexOf(d.getUTCDay()) === -1) n++; }
+  return n;
+}
 function planLeaveRecalc(){
   const changes = [];
-  const byEmp = {};
-  state.leaveRecords.forEach(function(r){ (byEmp[r.employeeId] = byEmp[r.employeeId] || []).push(r); });
-  let migrated = 0, skippedManual = 0;
-  Object.keys(byEmp).forEach(function(empId){
-    const emp = state.employees.find(function(e){ return e.id===empId; });
-    const recs = byEmp[empId].slice().sort(function(a,b){ return (a.dateFrom||'').localeCompare(b.dateFrom||''); });
-    const newDays = {};
-    let any = false;
-    recs.forEach(function(r){
-      const cal = calendarDaysBetween(r.dateFrom, r.dateTo);
-      const work = daysBetween(r.dateFrom, r.dateTo);
-      if(cal && Math.abs(r.days - cal) < 0.001 && Math.abs(work - r.days) >= 0.001){ newDays[r.id] = work; any = true; migrated++; }
-      else { newDays[r.id] = r.days; if(cal && Math.abs(r.days - cal) >= 0.001 && Math.abs(r.days - work) >= 0.001) skippedManual++; }
-    });
-    if(!any || !emp) return;
-    const years = calcYears(emp.hireDate, emp.status==='terminated' ? emp.serviceEndDate : null);
-    let remaining = round2(years * 30);
-    recs.forEach(function(r){
-      const days = newDays[r.id];
-      const paid = round2(Math.max(0, Math.min(days, remaining)));
-      const unpaid = round2(Math.max(0, days - paid));
-      remaining = round2(remaining - paid);
-      if(Math.abs(days - r.days) >= 0.001 || Math.abs(paid - r.paidDays) >= 0.001 || Math.abs(unpaid - (r.unpaidDays||0)) >= 0.001){
-        changes.push({rec:r, days:days, paid:paid, unpaid:unpaid});
-      }
-    });
+  let skippedManual = 0;
+  state.leaveRecords.forEach(function(r){
+    const cal = calendarDaysBetween(r.dateFrom, r.dateTo);
+    if(!cal) return;
+    const work = daysBetween(r.dateFrom, r.dateTo);
+    const auto = Math.abs(r.days - cal) < 0.001 || Math.abs(r.days - weekendOnlyDays(r.dateFrom, r.dateTo)) < 0.001;
+    if(!auto){ if(Math.abs(r.days - work) >= 0.001) skippedManual++; return; }
+    if(Math.abs(work - r.days) < 0.001) return;
+    const unpaid = round2(Math.min(r.unpaidDays || 0, work));
+    const paid = round2(Math.max(0, work - unpaid));
+    changes.push({rec:r, days:work, paid:paid, unpaid:unpaid});
   });
-  return {changes:changes, migrated:migrated, skippedManual:skippedManual};
+  return {changes:changes, skippedManual:skippedManual};
 }
 async function runLeaveRecalc(){
   const plan = planLeaveRecalc();
   if(!plan.changes.length){ toast(t('recalc_nothing')); return; }
   const before = plan.changes.reduce(function(s,c){ return s + c.rec.days; }, 0);
   const after = plan.changes.reduce(function(s,c){ return s + c.days; }, 0);
-  const msg = t('recalc_confirm').replace('{n}', plan.changes.length).replace('{before}', round2(before)).replace('{after}', round2(after)) +
+  const freed = plan.changes.reduce(function(s,c){ return s + (c.rec.paidDays - c.paid); }, 0);
+  const msg = t('recalc_confirm').replace('{n}', plan.changes.length).replace('{before}', round2(before)).replace('{after}', round2(after)).replace('{freed}', round2(Math.max(0,freed))) +
     (plan.skippedManual ? '\n'+t('recalc_skipped').replace('{n}', plan.skippedManual) : '');
   if(!(await confirmAction({title:t('recalc_title'), message:msg, confirmLabel:t('recalc_btn')}))) return;
   let failed = 0;
@@ -2901,10 +2994,24 @@ async function adminRevoke(userId){
 }
 
 /* ============ Data management (backup / restore / excel / reset) ============ */
+function accountSectionHtml(){
+  let exp = null;
+  if(currentSubscription && currentSubscription.approved_at){ exp = new Date(currentSubscription.approved_at); exp.setFullYear(exp.getFullYear()+1); }
+  const expStr = exp ? exp.getFullYear()+'-'+String(exp.getMonth()+1).padStart(2,'0')+'-'+String(exp.getDate()).padStart(2,'0') : null;
+  const daysLeft = exp ? Math.ceil((exp - new Date())/86400000) : null;
+  const wa = 'https://wa.me/96565068000?text='+encodeURIComponent(t('acc_wa_text'));
+  return '<section class="acc-sec"><h4>'+t('acc_title')+'</h4>'+
+    (currentCompanyName ? kv(t('acc_company'), '<bdi>'+escapeHtml(currentCompanyName)+'</bdi>') : '')+
+    (currentUserEmail ? kv(t('field_email'), '<span class="num">'+escapeHtml(currentUserEmail)+'</span>') : '')+
+    (expStr ? kv(t('acc_expiry'), fmtDate(expStr)+(daysLeft!=null && daysLeft<=30 ? ' <span class="sub-badge pending">'+t('acc_days_left').replace('{n}', Math.max(0,daysLeft))+'</span>' : '')) : '')+
+    '<a class="btn-outline acc-wa" href="'+wa+'" target="_blank" rel="noopener">'+t('acc_support')+'</a>'+
+  '</section>';
+}
 function openDataManageModal(){
   openModal(''+
     '<div class="modal-header"><h3>'+t('dm_title')+'</h3><button type="button" class="modal-close" data-action="close-modal">×</button></div>'+
     '<div class="modal-body">'+
+      accountSectionHtml()+
       '<p class="dm-hint" style="margin-top:0">'+t('dm_hint')+'</p>'+
       '<div class="dm-actions" style="margin-top:10px">'+
         '<button class="btn-outline" data-action="export-json">'+t('btn_export_json')+'</button>'+
@@ -2936,7 +3043,9 @@ function loadXlsx(){
   if(!xlsxPromise){
     xlsxPromise = new Promise(function(resolve, reject){
       const sc = document.createElement('script');
-      sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      sc.integrity = 'sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw';
+      sc.crossOrigin = 'anonymous';
       sc.onload = function(){ resolve(); };
       sc.onerror = function(){ xlsxPromise = null; reject(); };
       document.head.appendChild(sc);
@@ -3179,6 +3288,7 @@ function showApp(isAdmin){
   document.getElementById('waitingScreen').style.display = 'none';
   document.getElementById('expiredScreen').style.display = 'none';
   document.getElementById('appRoot').style.display = '';
+  if(!isAdmin){ const stale = document.querySelector('[data-tab="admin"]'); if(stale) stale.remove(); }
   if(isAdmin && !document.querySelector('[data-tab="admin"]')){
     var nav = document.getElementById('tabsNav');
     var btn = document.createElement('button');
@@ -3191,11 +3301,17 @@ function showApp(isAdmin){
 }
 async function bootApp(){
   setSyncStatus(true, t('sync_loading'));
-  var res = await sb.auth.getUser();
-  var user = res.data && res.data.user;
+  var res = await sb.auth.getUser().catch(function(e){ return {error:e}; });
+  var user = res && res.data && res.data.user;
+  if(!user){
+    var ses = await sb.auth.getSession().catch(function(){ return null; });
+    user = ses && ses.data && ses.data.session && ses.data.session.user;
+  }
+  if(!user){ setSyncStatus(false); toast(t('err_network'),'error'); showLogin(); return; }
   var isAdmin = user && user.email === ADMIN_EMAIL;
   if(!isAdmin){
     var pr = await sb.from('user_profiles').select('approved,approved_at').eq('id', user.id).single();
+    currentSubscription = pr.data || null;
     if(!pr.data || !pr.data.approved){ showWaiting(user.email); return; }
     if(pr.data.approved_at){
       var expiryDate = new Date(pr.data.approved_at);
@@ -3204,6 +3320,7 @@ async function bootApp(){
     }
   }
   currentCompanyName = (user && user.user_metadata && user.user_metadata.company_name) || '';
+  currentUserEmail = user.email || '';
   var sub = document.querySelector('.brand .titles p');
   if(sub && currentCompanyName){ sub.removeAttribute('data-i18n'); sub.textContent = currentCompanyName; sub.setAttribute('dir','auto'); }
   showApp(isAdmin);
@@ -3326,7 +3443,17 @@ document.addEventListener('click', function(e){
 
 sb.auth.onAuthStateChange(function(event, session){
   if(event === 'SIGNED_OUT'){
-    state = defaultState();
+    // Leave nothing from the previous account on screen (accounting offices switch between client logins)
+    document.getElementById('confirmOverlay').classList.remove('show');
+    document.getElementById('modalOverlay').classList.remove('show');
+    document.getElementById('modalBox').innerHTML = '';
+    hideDrawer();
+    document.getElementById('empDrawer').innerHTML = '';
+    document.getElementById('printSheet').innerHTML = '';
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.innerHTML = ''; });
+    const adminTab = document.querySelector('[data-tab="admin"]'); if(adminTab) adminTab.remove();
+    state = defaultState(); currentCompanyName = ''; currentSubscription = null; currentUserEmail = '';
+    uiState.activeTab = 'dashboard';
     showLogin();
   }
 });
