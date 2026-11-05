@@ -320,6 +320,41 @@ html[dir="ltr"] .num{direction:ltr;}
   *{scroll-behavior:auto;}
 }
 
+/* Sortable headers */
+.th-sort{background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+.th-sort::after{content:'↕';opacity:.35;font-size:.85em;}
+.th-sort.on::after{content:'▲';opacity:.8;}
+th[aria-sort="descending"] .th-sort.on::after{content:'▼';}
+.th-sort:hover{color:var(--navy);}
+.nowrap{white-space:nowrap;}
+.doc-flag{display:inline-block;margin-inline-start:8px;padding:2px 8px;border-radius:20px;background:var(--amber-bg);color:var(--amber);font-size:.7rem;font-weight:700;vertical-align:1px;}
+
+/* Document alerts */
+.doc-alerts{background:var(--surface);border:1px solid #f2d9b8;border-radius:var(--radius);padding:14px 16px;margin-bottom:22px;}
+.doc-alerts h2{margin:0 0 8px;font-size:.95rem;color:var(--amber);}
+.doc-alerts ul{list-style:none;margin:0;padding:0;}
+.doc-alerts li{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--border);font-size:.84rem;}
+.doc-alerts li > span:first-of-type{color:var(--text-muted);flex:1;min-width:140px;}
+
+/* Onboarding */
+.onb{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;box-shadow:var(--shadow);}
+.onb-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.onb-head h2{margin:0;font-size:1.05rem;color:var(--navy);}
+.onb-head p{margin:4px 0 0;font-size:.82rem;color:var(--text-muted);line-height:1.6;}
+.onb-hide{width:auto !important;flex-shrink:0;}
+.onb-bar{height:6px;background:#eef1f7;border-radius:6px;margin:14px 0 6px;overflow:hidden;}
+.onb-bar span{display:block;height:100%;background:var(--green);border-radius:6px;}
+.onb-steps{list-style:none;margin:0;padding:0;}
+.onb-steps li{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--border);}
+.onb-steps li:first-child{border-top:none;}
+.onb-steps li > div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.onb-steps b{font-size:.88rem;color:var(--text);}
+.onb-steps li > div > span{font-size:.78rem;color:var(--text-muted);line-height:1.5;}
+.onb-steps li.done b{color:var(--text-muted);text-decoration:line-through;text-decoration-color:rgba(91,100,116,.4);}
+.onb-mark{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;flex-shrink:0;color:#fff;}
+.onb-steps li.done .onb-mark{background:var(--green);border-color:var(--green);}
+.onb-steps .btn-primary{flex-shrink:0;}
+
 /* Account section in settings */
 .acc-sec{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;background:#f8f9fc;}
 .acc-sec h4{margin:0 0 6px;font-size:.88rem;color:var(--navy);}
@@ -478,6 +513,22 @@ body.drawer-open{overflow:hidden;}
   .stackable tbody td[colspan]{display:block;text-align:center;}
   .stackable tbody td[colspan]::before{display:none;}
   .stackable .cell-actions{justify-content:flex-end;flex-wrap:wrap;}
+  /* Employees: compact card — name + status, service line, net due, actions (full detail lives in the drawer) */
+  .emp-cards tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name status" "meta meta" "net actions";gap:6px 12px;padding:14px 16px;}
+  .emp-cards tbody td{border:none !important;padding:0 !important;display:block !important;text-align:start;}
+  .emp-cards tbody td::before{display:none !important;}
+  .emp-cards td.c-no,.emp-cards td.c-hire,.emp-cards td.c-salary,.emp-cards td.c-eos{display:none !important;}
+  .emp-cards td.c-name{grid-area:name;font-size:1rem;}
+  .emp-cards td.c-status{grid-area:status;text-align:end;}
+  .emp-cards td.c-status br{display:none;}
+  .emp-cards td.c-years{grid-area:meta;font-size:.8rem;color:var(--text-muted);}
+  .emp-cards td.c-net{grid-area:net;align-self:end;font-size:1.15rem;}
+  .emp-cards td.c-net::before{content:attr(data-label) !important;display:block !important;white-space:nowrap;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:2px;}
+  .emp-cards td.c-actions{grid-area:actions;align-self:end;}
+  .emp-cards td[colspan]{grid-column:1/-1;}
+  .onb-head{flex-direction:column;}
+  .onb-steps li{flex-wrap:wrap;}
+  .onb-steps .btn-primary{margin-inline-start:36px;}
   .stackable .cell-v{min-width:0;text-align:end;}
   .stackable .cell-v .badge,.stackable .cell-v .sub-badge{margin-top:2px;}
   .form-grid{grid-template-columns:1fr;}
@@ -694,6 +745,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_EMAIL = 'reem@primekw.net';
 let currentCompanyName = '';
 let hasOpeningLeaveCols = false;
+let hasDocCols = false;
 let currentSubscription = null, currentUserEmail = '';
 
 /* ── إعدادات الاشتراك ── */
@@ -926,7 +978,7 @@ const TR = {
   hol_saved: {ar:'تم حفظ العطلة', en:'Holiday saved'},
   hol_confirm_delete: {ar:'حذف هذه العطلة من القائمة؟', en:'Remove this holiday from the list?'},
   leave_preview_working: {ar:'أيام عمل / أيام تقويمية', en:'Working / calendar days'},
-  leave_preview_first6: {ar:'⚠ الموظف لم يُكمل 6 أشهر في الخدمة. حسب المادة 70 من قانون العمل، يستحق إجازة السنة الأولى بعد 6 أشهر على الأقل من الخدمة.', en:'⚠ The employee has not completed 6 months of service. Under Article 70 of the Labour Law, first-year leave is due after at least 6 months of service.'},
+  leave_preview_first6: {ar:'الموظف لم يُكمل 6 أشهر في الخدمة عند بداية هذه الإجازة، فتُسجَّل بدون أجر وفق المادة 70 من قانون العمل. يصبح رصيده مستحقاً بعد إتمام 6 أشهر.', en:'The employee has not completed 6 months of service when this leave starts, so it is recorded as unpaid under Article 70 of the Labour Law. The balance becomes due after 6 months.'},
   leave_total_unpaid: {ar:'إجمالي أيام بدون أجر', en:'Total unpaid days'},
   leave_total_deduction: {ar:'إجمالي الخصم المستحق', en:'Total deduction due'},
   modal_add_leave: {ar:'تسجيل إجازة', en:'Record leave'},
@@ -949,6 +1001,39 @@ const TR = {
   btn_end_service: {ar:'إنهاء الخدمة', en:'End service'},
   btn_reactivate: {ar:'إعادة تفعيل', en:'Reactivate'},
   btn_close: {ar:'إغلاق', en:'Close'},
+  doc_title: {ar:'الوثائق (البطاقة المدنية والإقامة)', en:'Documents (Civil ID & residency)'},
+  doc_civil_id: {ar:'الرقم المدني', en:'Civil ID no.'},
+  doc_nationality: {ar:'الجنسية', en:'Nationality'},
+  doc_residency_expiry: {ar:'انتهاء الإقامة', en:'Residency expiry'},
+  doc_passport_expiry: {ar:'انتهاء جواز السفر', en:'Passport expiry'},
+  doc_residency: {ar:'الإقامة', en:'Residency'},
+  doc_passport: {ar:'جواز السفر', en:'Passport'},
+  doc_hint: {ar:'يظهر تنبيه في لوحة التحكم قبل انتهاء الإقامة أو الجواز بـ 60 يوماً. لا تُطلب الإقامة للموظف الكويتي.', en:'The dashboard warns 60 days before a residency or passport expires. Residency is not needed for Kuwaiti staff.'},
+  doc_expired: {ar:'منتهية', en:'Expired'},
+  doc_days_left: {ar:'بعد {n} يوم', en:'in {n} days'},
+  doc_alert_short: {ar:'وثيقة تنتهي', en:'Document expiring'},
+  doc_alerts_title: {ar:'وثائق منتهية أو تنتهي خلال 60 يوماً ({n})', en:'Documents expired or expiring within 60 days ({n})'},
+  doc_more: {ar:'و{n} أخرى. افتح صفحة الموظف للتفاصيل.', en:'and {n} more. Open the employee for details.'},
+  err_civil_id: {ar:'الرقم المدني يتكون من 12 رقماً', en:'Civil ID must be 12 digits'},
+  onb_welcome: {ar:'أهلاً بك في Prime HR', en:'Welcome to Prime HR'},
+  onb_title: {ar:'خطوات البدء', en:'Getting started'},
+  onb_sub: {ar:'أكملت {done} من {total} خطوات. بعدها تُحسب نهاية الخدمة والإجازات تلقائياً وفق قانون العمل الكويتي.', en:'{done} of {total} steps done. After that, end of service and leave are calculated automatically under Kuwaiti labour law.'},
+  onb_hide: {ar:'إخفاء', en:'Hide'},
+  onb_done: {ar:'مكتملة', en:'done'},
+  onb_view: {ar:'عرض', en:'View'},
+  onb_how: {ar:'الطريقة', en:'How'},
+  onb_company: {ar:'بيانات الشركة والاشتراك', en:'Company & subscription'},
+  onb_company_d: {ar:'تأكد من اسم الشركة وتاريخ انتهاء الاشتراك.', en:'Check your company name and subscription end date.'},
+  onb_employees: {ar:'أضف الموظفين', en:'Add your employees'},
+  onb_employees_d: {ar:'الاسم وتاريخ التعيين والراتب ومكوّناته.', en:'Name, hire date and salary components.'},
+  onb_opening: {ar:'أدخل أرصدة الإجازات الافتتاحية', en:'Enter opening leave balances'},
+  onb_opening_d: {ar:'للموظفين القدامى: رصيدهم المتبقي من نظامك السابق، من تعديل بيانات الموظف.', en:'For existing staff: their remaining balance from your previous system, via Edit employee.'},
+  onb_holidays: {ar:'راجع العطل الرسمية', en:'Review official holidays'},
+  onb_holidays_d: {ar:'تُستبعد تلقائياً من أيام الإجازة مع الجمعة والسبت.', en:'Excluded automatically from leave days, along with Fridays and Saturdays.'},
+  onb_a2hs: {ar:'ثبّت التطبيق على جوالك', en:'Install the app on your phone'},
+  onb_a2hs_d: {ar:'للوصول السريع من الشاشة الرئيسية.', en:'For quick access from your home screen.'},
+  hol_view_btn: {ar:'العطل الرسمية المعتمدة', en:'Official holidays in use'},
+  hol_readonly_hint: {ar:'هذه العطل تُستبعد من أيام الإجازة. التواريخ المعلّمة "تقريبي" بانتظار الإعلان الرسمي.', en:'These holidays are excluded from leave days. Dates marked "Approx." await the official announcement.'},
   err_number_invalid: {ar:'أدخل رقماً صحيحاً (مثال: 450 أو 450.500)', en:'Enter a valid number (e.g. 450 or 450.500)'},
   err_number_negative: {ar:'لا يمكن أن تكون القيمة سالبة', en:'The value cannot be negative'},
   err_opening_date: {ar:'حدد تاريخ الرصيد الافتتاحي', en:'Set the opening balance date'},
@@ -1307,7 +1392,8 @@ function updateLeavePreview(){
   if(!empId || days<=0){ previewEl.innerHTML = ''; return; }
   const emp = state.employees.find(function(e){ return e.id===empId; });
   if(!emp){ previewEl.innerHTML = ''; return; }
-  const available = leaveBalanceExcluding(empId, recordId||null);
+  const firstSix = inFirstSixMonths(emp, form.dateFrom.value);
+  const available = paidAvailableFor(empId, form.dateFrom.value, recordId||null);
   const paidDays = Math.min(days, available);
   const unpaidDays = Math.max(0, days - available);
   const currentSalary = calcCurrentSalary(emp);
@@ -1329,10 +1415,9 @@ function updateLeavePreview(){
   if(unpaidDays>0){
     html += '<div class="leave-preview-row"><span>'+t('leave_preview_unpaid')+'</span><b class="text-negative">'+fmtNum(unpaidDays,1)+' '+t('day_suffix')+'</b></div>';
     html += '<div class="leave-preview-row leave-preview-deduction"><span>'+t('leave_preview_deduction')+'</span><b>'+fmtKWD(unpaidDeduction)+'</b></div>';
-    html += '<div class="leave-preview-warning">'+t('leave_preview_warning')+'</div>';
+    if(!firstSix) html += '<div class="leave-preview-warning">'+t('leave_preview_warning')+'</div>';
   }
-  const monthsAtStart = calcYears(emp.hireDate, form.dateFrom.value || null) * 12;
-  if(form.dateFrom.value && monthsAtStart < 6){
+  if(firstSix){
     html += '<div class="leave-preview-warning">'+t('leave_preview_first6')+'</div>';
   }
   previewEl.innerHTML = html;
@@ -1437,6 +1522,34 @@ function empName(id){
   return e ? e.name : t('deleted_employee');
 }
 
+/* ============ Employee documents (Kuwait): residency & passport expiry ============ */
+const DOC_SOON_DAYS = 60;
+const NATIONALITIES = {
+  ar:['كويتي','هندي','مصري','فلبيني','بنغلاديشي','باكستاني','سريلانكي','نيبالي','سوري','أردني','لبناني','سعودي','بدون'],
+  en:['Kuwaiti','Indian','Egyptian','Filipino','Bangladeshi','Pakistani','Sri Lankan','Nepali','Syrian','Jordanian','Lebanese','Saudi','Bidoon']
+};
+function isKuwaiti(emp){ return /^(كويتي|كويتية|kuwaiti)$/i.test(String(emp.nationality||'').trim()); }
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  return Math.round((new Date(dateStr) - new Date(todayStr())) / 86400000);
+}
+function employeeDocAlerts(emp){
+  if(!hasDocCols || emp.status==='terminated') return [];
+  const out = [];
+  const add = function(kind, date){ const n = daysUntil(date); if(n!==null && n <= DOC_SOON_DAYS) out.push({kind:kind, date:date, days:n}); };
+  if(!isKuwaiti(emp)) add('residency', emp.residencyExpiry);
+  add('passport', emp.passportExpiry);
+  return out;
+}
+function docAlertCount(emp){ return employeeDocAlerts(emp).length; }
+function docBadge(dateStr){
+  const n = daysUntil(dateStr);
+  if(n===null) return '';
+  if(n < 0) return ' <span class="sub-badge inactive">'+t('doc_expired')+'</span>';
+  if(n <= DOC_SOON_DAYS) return ' <span class="sub-badge pending">'+t('doc_days_left').replace('{n}', n)+'</span>';
+  return '';
+}
+
 /* Leave accrual: 30 working days/year from the hire date, or from an opening balance set when moving from another system */
 function leaveAccruedFor(emp, asOf){
   if(emp.leaveOpeningBalance!=null && emp.leaveOpeningDate){
@@ -1446,6 +1559,16 @@ function leaveAccruedFor(emp, asOf){
 }
 function countsTowardBalance(emp, r){
   return !(emp.leaveOpeningBalance!=null && emp.leaveOpeningDate && r.dateFrom && r.dateFrom < emp.leaveOpeningDate);
+}
+/* Art. 70 (as amended): annual leave becomes due after 6 months of service.
+   Leave that starts before that point is recorded entirely as unpaid; the accrual itself still counts from the hire date. */
+function inFirstSixMonths(emp, dateFrom){
+  return !!(emp && emp.hireDate && dateFrom && calcYears(emp.hireDate, dateFrom) * 12 < 6);
+}
+function paidAvailableFor(empId, dateFrom, excludeRecordId){
+  const emp = state.employees.find(function(e){ return e.id===empId; });
+  if(!emp || inFirstSixMonths(emp, dateFrom)) return 0;
+  return leaveBalanceExcluding(empId, excludeRecordId);
 }
 /* Available leave balance for an employee EXCLUDING a specific record (used when editing that record) */
 function leaveBalanceExcluding(empId, excludeRecordId){
@@ -1468,6 +1591,8 @@ function mapEmployeeFromDb(r){
     transport:Number(r.transport), other:Number(r.other),
     status: r.status || 'active',
     leaveOpeningBalance: r.leave_opening_balance!=null ? Number(r.leave_opening_balance) : null,
+    civilId: r.civil_id || '', nationality: r.nationality || '',
+    residencyExpiry: r.residency_expiry || null, passportExpiry: r.passport_expiry || null,
     leaveOpeningDate: r.leave_opening_date || null,
     serviceEndDate: r.service_end_date || null,
     terminationType: r.termination_type || null,
@@ -1519,13 +1644,14 @@ async function loadDataFromSupabase(){
   state.loans = loanRes.data.map(mapLoanFromDb);
   state.eosPayments = eosRes.data.map(mapEosFromDb);
   state.leaveRecords = leaveRes.data.map(mapLeaveFromDb);
-  await holidaysLoad; await openingProbe;
+  const docProbe = sb.from('employees').select('civil_id').limit(1).then(function(r){ hasDocCols = !r.error; }, function(){ hasDocCols = false; });
+  await holidaysLoad; await openingProbe; await docProbe;
   state.nextEmployeeNo = state.employees.reduce(function(m,e){ return Math.max(m, e.no); }, 0) + 1;
   setSyncStatus(true);
   return true;
 }
 
-let uiState = { activeTab:'dashboard', employeeSearch:'', loanFilterEmp:'', loanFilterStatus:'unpaid', eosFilterEmp:'', leaveFilterEmp:'' };
+let uiState = { activeTab:'dashboard', empSort:{key:'no', dir:1}, employeeSearch:'', loanFilterEmp:'', loanFilterStatus:'unpaid', eosFilterEmp:'', leaveFilterEmp:'' };
 
 /* ============ Toast ============ */
 function toast(msg, type){
@@ -1768,7 +1894,7 @@ function renderTabShell(tab){
 function renderDashboard(){
   const root = document.getElementById('tab-dashboard');
   if(state.employees.length===0){
-    root.innerHTML = emptyState(SVG.dashboard, t('dash_no_data_title'), t('dash_no_data_desc'), 'open-add-employee', t('btn_add_employee'));
+    root.innerHTML = onboardingHtml(true) || emptyState(SVG.dashboard, t('dash_no_data_title'), t('dash_no_data_desc'), 'open-add-employee', t('btn_add_employee'));
     return;
   }
   const derived = state.employees.map(function(e){ return {emp:e, d:computeEmployeeDerived(e)}; });
@@ -1783,6 +1909,7 @@ function renderDashboard(){
 
   let html = '';
   const activeCount = state.employees.filter(function(e){ return e.status!=='terminated'; }).length;
+  html += onboardingHtml(false);
   html += '<div class="kpi-lead">'+
     '<div class="kpi-lead-main"><div class="label">'+t('kpi_total_net_due')+'</div>'+
       '<div class="value">'+fmtKWD(totalNetDue)+'</div>'+
@@ -1797,6 +1924,7 @@ function renderDashboard(){
   html += '<div class="kpi-card"><div class="label">'+t('kpi_total_loans')+'</div><div class="value">'+fmtKWD(totalLoans)+'</div></div>';
   html += '<div class="kpi-card"><div class="label">'+t('kpi_total_eos_paid')+'</div><div class="value">'+fmtKWD(totalEosPaid)+'</div></div>';
   html += '</div>';
+  html += docAlertsHtml();
   html += '<div class="section-toolbar"><h2>'+t('dash_top5')+'</h2></div>';
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
   html += '<thead><tr><th>'+t('col_employee')+'</th><th>'+t('col_hire_date')+'</th><th>'+t('col_years')+'</th><th>'+t('col_eos_est')+'</th><th>'+t('col_net_due')+'</th></tr></thead><tbody>';
@@ -1806,6 +1934,57 @@ function renderDashboard(){
   });
   html += '</tbody></table></div></div>';
   root.innerHTML = html;
+}
+
+function docAlertsHtml(){
+  if(!hasDocCols) return '';
+  const rows = [];
+  state.employees.forEach(function(e){ employeeDocAlerts(e).forEach(function(a){ rows.push({emp:e, a:a}); }); });
+  if(!rows.length) return '';
+  rows.sort(function(x,y){ return x.a.days - y.a.days; });
+  return '<section class="doc-alerts" aria-labelledby="docAlertsTitle"><h2 id="docAlertsTitle">'+t('doc_alerts_title').replace('{n}', rows.length)+'</h2><ul>'+
+    rows.slice(0,8).map(function(r){
+      return '<li><button type="button" class="name-link" data-action="open-employee" data-id="'+r.emp.id+'">'+escapeHtml(r.emp.name)+'</button>'+
+        '<span>'+t(r.a.kind==='residency'?'doc_residency':'doc_passport')+' · '+fmtDate(r.a.date)+'</span>'+
+        (r.a.days<0 ? '<span class="sub-badge inactive">'+t('doc_expired')+'</span>' : '<span class="sub-badge pending">'+t('doc_days_left').replace('{n}', r.a.days)+'</span>')+'</li>';
+    }).join('')+'</ul>'+(rows.length>8?'<p class="drw-note">'+t('doc_more').replace('{n}', rows.length-8)+'</p>':'')+'</section>';
+}
+function onbKey(){ return 'primeHR_onb:'+(currentUserEmail||'local'); }
+/* Getting-started checklist for new subscribers (hidden once complete or dismissed) */
+function onboardingHtml(empty){
+  let st = null; try{ st = localStorage.getItem(onbKey()); }catch(e){}
+  if(st==='dismissed') return '';
+  let seen = {}; try{ seen = {hol: !!localStorage.getItem(onbKey()+':hol'), a2hs: !!localStorage.getItem(onbKey()+':a2hs')}; }catch(e){}
+  const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+  const needOpening = hasOpeningLeaveCols && state.employees.some(function(e){ return calcYears(e.hireDate) >= 1 && e.leaveOpeningBalance==null; });
+  const steps = [
+    {done: !!currentCompanyName, title:t('onb_company'), desc:t('onb_company_d'), action:'onb-company', cta:t('onb_view')},
+    {done: state.employees.length>0, title:t('onb_employees'), desc:t('onb_employees_d'), action:'open-add-employee', cta:t('btn_add_employee')}
+  ];
+  if(hasOpeningLeaveCols) steps.push({done: state.employees.length>0 && !needOpening, title:t('onb_opening'), desc:t('onb_opening_d'), action: state.employees.length ? 'goto-employees' : '', cta:t('onb_view')});
+  steps.push({done: !!seen.hol, title:t('onb_holidays'), desc:t('onb_holidays_d'), action:'open-holidays', cta:t('onb_view')});
+  steps.push({done: !!seen.a2hs || standalone, title:t('onb_a2hs'), desc:t('onb_a2hs_d'), action:'onb-a2hs', cta:t('onb_how')});
+  const doneCount = steps.filter(function(x){ return x.done; }).length;
+  if(!empty && doneCount === steps.length) return '';
+  return '<section class="onb" aria-labelledby="onbTitle">'+
+    '<div class="onb-head"><div><h2 id="onbTitle">'+t(empty?'onb_welcome':'onb_title')+'</h2><p>'+t('onb_sub').replace('{done}', doneCount).replace('{total}', steps.length)+'</p></div>'+
+      (empty?'':'<button type="button" class="btn-outline onb-hide" data-action="onb-dismiss">'+t('onb_hide')+'</button>')+'</div>'+
+    '<div class="onb-bar" aria-hidden="true"><span style="width:'+Math.round(doneCount/steps.length*100)+'%"></span></div>'+
+    '<ol class="onb-steps">'+steps.map(function(x){
+      return '<li class="'+(x.done?'done':'')+'"><span class="onb-mark" aria-hidden="true">'+(x.done?'✓':'')+'</span><div><b>'+x.title+(x.done?' <span class="sr-only">('+t('onb_done')+')</span>':'')+'</b><span>'+x.desc+'</span></div>'+
+        (!x.done && x.action ? '<button type="button" class="btn-primary" data-action="'+x.action+'">'+x.cta+'</button>' : '')+'</li>';
+    }).join('')+'</ol></section>';
+}
+/* Read-only list of official holidays (all users) */
+function openHolidaysModal(){
+  try{ localStorage.setItem(onbKey()+':hol','1'); }catch(e){}
+  const yr = String(new Date().getFullYear());
+  const list = holidays.filter(function(h){ return h.date >= (+yr-1)+'-01-01'; });
+  openModal('<div class="modal-header"><h3>'+t('hol_title')+'</h3><button type="button" class="modal-close" data-action="close-modal">×</button></div>'+
+    '<div class="modal-body"><p class="dm-hint" style="margin-top:0">'+t('hol_readonly_hint')+'</p><ul class="drw-list">'+
+    list.map(function(h){ return '<li><span>'+escapeHtml(currentLang==='en'?h.en:h.ar)+(h.approx?' <span class="sub-badge pending">'+t('hol_approx_badge')+'</span>':'')+'</span><b>'+fmtDate(h.date)+'</b></li>'; }).join('')+
+    '</ul></div><div class="modal-footer"><button type="button" class="btn-primary" data-action="close-modal">'+t('a2hs_got_it')+'</button></div>');
+  if(uiState.activeTab==='dashboard') renderDashboard();
 }
 
 function numSpan(v){ return '<span class="num">'+v+'</span>'; }
@@ -1819,8 +1998,12 @@ function renderEmployeesShell(){
   html += '<input type="text" class="search-input" id="employeeSearch" aria-label="'+t('emp_search_placeholder')+'" placeholder="'+t('emp_search_placeholder')+'" value="'+escapeHtml(uiState.employeeSearch)+'">';
   html += '<button class="btn-primary" data-action="open-add-employee">'+t('btn_add_employee')+'</button>';
   html += '</div></div>';
-  html += '<div class="table-card stackable"><div class="table-scroll"><table>';
-  html += '<thead><tr><th>'+t('col_num')+'</th><th>'+t('col_name')+'</th><th>'+t('col_hire_date')+'</th><th>'+t('col_years')+'</th><th>'+t('col_total_salary')+'</th><th>'+t('col_status')+'</th><th>'+t('col_eos_est')+'</th><th>'+t('col_net_due')+'</th><th>'+t('col_actions')+'</th></tr></thead>';
+  const sortTh = function(key, label){
+    const on = uiState.empSort.key===key;
+    return '<th'+(on?' aria-sort="'+(uiState.empSort.dir>0?'ascending':'descending')+'"':'')+'><button type="button" class="th-sort'+(on?' on':'')+'" data-action="emp-sort" data-key="'+key+'">'+label+'</button></th>';
+  };
+  html += '<div class="table-card stackable emp-cards"><div class="table-scroll"><table>';
+  html += '<thead><tr>'+sortTh('no',t('col_num'))+sortTh('name',t('col_name'))+sortTh('hire',t('col_hire_date'))+sortTh('years',t('col_years'))+sortTh('salary',t('col_total_salary'))+'<th>'+t('col_status')+'</th><th>'+t('col_eos_est')+'</th>'+sortTh('net',t('col_net_due'))+'<th>'+t('col_actions')+'</th></tr></thead>';
   html += '<tbody id="employeesTbody"></tbody></table></div></div>';
   root.innerHTML = html;
   renderEmployeesRows();
@@ -1834,13 +2017,29 @@ function renderEmployeesRows(){
   if(!tbody) return;
   const q = uiState.employeeSearch.trim().toLowerCase();
   let list = state.employees.filter(function(e){ return !q || e.name.toLowerCase().includes(q); });
-  list = list.slice().sort(function(a,b){ return a.no-b.no; });
+  const derivedById = {};
+  list.forEach(function(e){ derivedById[e.id] = computeEmployeeDerived(e); });
+  const sk = uiState.empSort.key, dir = uiState.empSort.dir;
+  const sortVal = function(e){
+    const d = derivedById[e.id];
+    if(sk==='name') return e.name || '';
+    if(sk==='hire') return e.hireDate || '';
+    if(sk==='years') return d.years;
+    if(sk==='salary') return d.currentSalary;
+    if(sk==='net') return d.netDue;
+    return e.no;
+  };
+  list = list.slice().sort(function(a,b){
+    const va = sortVal(a), vb = sortVal(b);
+    const c = (typeof va === 'string') ? va.localeCompare(vb, currentLang==='en'?'en':'ar') : (va - vb);
+    return (c || (a.no - b.no)) * (c ? dir : 1);
+  });
   if(list.length===0){
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:30px">'+t('no_search_results')+'</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(emp){
-    const d = computeEmployeeDerived(emp);
+    const d = derivedById[emp.id];
     const isTerminated = emp.status === 'terminated';
     let statusBadge;
     if(!isTerminated){
@@ -1861,16 +2060,17 @@ function renderEmployeesRows(){
     const actions = isTerminated
       ? iconBtn('reactivate-employee','data-id',emp.id,ICON.reactivate,t('btn_reactivate'))
       : iconBtn('open-end-service','data-id',emp.id,ICON.endService,t('btn_end_service'),'warn');
+    const docFlag = docAlertCount(emp) ? '<span class="doc-flag" title="'+t('doc_alert_short')+'">'+t('doc_alert_short')+'</span>' : '';
     return '<tr>'+
-      '<td>'+numSpan(emp.no)+'</td>'+
-      '<td><button type="button" class="name-link" data-action="open-employee" data-id="'+emp.id+'" aria-label="'+t('drw_view')+': '+escapeHtml(emp.name)+'">'+escapeHtml(emp.name)+'</button></td>'+
-      '<td>'+fmtDate(emp.hireDate)+'</td>'+
-      '<td>'+fmtNum(d.years,1)+' '+t('years_suffix')+'</td>'+
-      '<td>'+fmtKWD(d.currentSalary)+'</td>'+
-      '<td>'+statusBadge+'</td>'+
-      '<td>'+eosCell+'</td>'+
-      '<td class="'+(d.netDue>=0?'text-positive':'text-negative')+'">'+fmtKWD(d.netDue)+'</td>'+
-      '<td><div class="cell-actions">'+
+      '<td class="c-no">'+numSpan(emp.no)+'</td>'+
+      '<td class="c-name"><button type="button" class="name-link" data-action="open-employee" data-id="'+emp.id+'" aria-label="'+t('drw_view')+': '+escapeHtml(emp.name)+'">'+escapeHtml(emp.name)+'</button>'+docFlag+'</td>'+
+      '<td class="c-hire">'+fmtDate(emp.hireDate)+'</td>'+
+      '<td class="c-years">'+fmtNum(d.years,1)+' '+t('years_suffix')+'</td>'+
+      '<td class="c-salary">'+fmtKWD(d.currentSalary)+'</td>'+
+      '<td class="c-status">'+statusBadge+'</td>'+
+      '<td class="c-eos">'+eosCell+'</td>'+
+      '<td class="c-net '+(d.netDue>=0?'text-positive':'text-negative')+'">'+fmtKWD(d.netDue)+'</td>'+
+      '<td class="c-actions"><div class="cell-actions">'+
         actions+
         iconBtn('edit-employee','data-id',emp.id,ICON.edit,t('btn_edit'))+
         iconBtn('delete-employee','data-id',emp.id,ICON.trash,t('btn_delete'),'danger')+
@@ -1887,10 +2087,10 @@ function employeeModalHtml(emp){
       (editing ? '<div class="field full"><span class="sub-badge '+(emp.status==='terminated'?'inactive':'active')+'">'+(emp.status==='terminated'?t('status_terminated_emp'):t('status_active_emp'))+'</span></div>' : '')+
       '<div class="field full"><label>'+t('field_emp_name')+'</label><input type="text" name="name" required value="'+escapeHtml(emp.name)+'"></div>'+
       '<div class="field"><label>'+t('field_hire_date')+'</label><input type="date" name="hireDate" required value="'+(emp.hireDate||'')+'"></div>'+
-      '<div class="field"><label>'+t('field_basic')+'</label><input type="text" inputmode="decimal" name="basic" required value="'+emp.basic+'"></div>'+
-      '<div class="field"><label>'+t('field_housing')+'</label><input type="text" inputmode="decimal" name="housing" value="'+emp.housing+'"></div>'+
-      '<div class="field"><label>'+t('field_transport')+'</label><input type="text" inputmode="decimal" name="transport" value="'+emp.transport+'"></div>'+
-      '<div class="field full"><label>'+t('field_other')+'</label><input type="text" inputmode="decimal" name="other" value="'+emp.other+'"></div>'+
+      '<div class="field"><label>'+t('field_basic')+'</label><input type="text" inputmode="decimal" name="basic" required value="'+(emp.basic!=null?emp.basic:'')+'"></div>'+
+      '<div class="field"><label>'+t('field_housing')+'</label><input type="text" inputmode="decimal" name="housing" value="'+(emp.housing!=null?emp.housing:'')+'"></div>'+
+      '<div class="field"><label>'+t('field_transport')+'</label><input type="text" inputmode="decimal" name="transport" value="'+(emp.transport!=null?emp.transport:'')+'"></div>'+
+      '<div class="field full"><label>'+t('field_other')+'</label><input type="text" inputmode="decimal" name="other" value="'+(emp.other!=null?emp.other:'')+'"></div>'+
       '<div class="field full"><label>'+t('field_eos_pay_basis')+'</label>'+
         '<select name="eosPayBasis">'+
           '<option value="full" '+((!emp.eosPayBasis||emp.eosPayBasis==='full')?'selected':'')+'>'+t('opt_leave_basis_full')+'</option>'+
@@ -1905,9 +2105,16 @@ function employeeModalHtml(emp){
         '<div class="hint">'+t('hint_leave_basis')+'</div></div>'+
       '<details class="advanced full"><summary>'+t('advanced_raise')+'</summary><div class="form-grid">'+
         '<div class="field checkbox-row full"><input type="checkbox" id="raiseApplied" name="raiseApplied" '+(emp.raiseApplied?'checked':'')+'><label for="raiseApplied">'+t('field_raise_applied')+'</label></div>'+
-        '<div class="field full"><label>'+t('field_raise_pct')+'</label><input type="text" inputmode="decimal" name="raisePct" value="'+emp.raisePct+'">'+
+        '<div class="field full"><label>'+t('field_raise_pct')+'</label><input type="text" inputmode="decimal" name="raisePct" value="'+(emp.raisePct!=null?emp.raisePct:'')+'">'+
           '<div class="hint">'+t('hint_raise')+'</div></div>'+
       '</div></details>'+
+      (hasDocCols ? '<details class="advanced full"'+((emp.civilId||emp.residencyExpiry||emp.passportExpiry)?' open':'')+'><summary>'+t('doc_title')+'</summary><div class="form-grid">'+
+        '<div class="field"><label>'+t('doc_civil_id')+'</label><input type="text" inputmode="numeric" name="civilId" maxlength="14" value="'+escapeHtml(emp.civilId||'')+'"></div>'+
+        '<div class="field"><label>'+t('doc_nationality')+'</label><input type="text" name="nationality" list="natList" value="'+escapeHtml(emp.nationality||'')+'"><datalist id="natList">'+NATIONALITIES[currentLang==='en'?'en':'ar'].map(function(n){ return '<option value="'+n+'">'; }).join('')+'</datalist></div>'+
+        '<div class="field"><label>'+t('doc_residency_expiry')+'</label><input type="date" name="residencyExpiry" value="'+(emp.residencyExpiry||'')+'"></div>'+
+        '<div class="field"><label>'+t('doc_passport_expiry')+'</label><input type="date" name="passportExpiry" value="'+(emp.passportExpiry||'')+'"></div>'+
+        '<div class="hint full">'+t('doc_hint')+'</div>'+
+      '</div></details>' : '')+
       (hasOpeningLeaveCols ? '<details class="advanced full"'+(emp.leaveOpeningBalance!=null?' open':'')+'><summary>'+t('opening_title')+'</summary><div class="form-grid">'+
         '<div class="field"><label>'+t('opening_balance')+'</label><input type="text" inputmode="decimal" name="leaveOpeningBalance" value="'+(emp.leaveOpeningBalance!=null?emp.leaveOpeningBalance:'')+'"></div>'+
         '<div class="field"><label>'+t('opening_date')+'</label><input type="date" name="leaveOpeningDate" value="'+(emp.leaveOpeningDate||'')+'"></div>'+
@@ -1945,6 +2152,12 @@ async function handleEmployeeSubmit(form){
   for(const f of [['basic',{required:true,positive:true}],['housing'],['transport'],['other'],['raisePct']]){
     const v = numField(form, f[0], f[1]); if(v===null) return; data[f[0]] = v;
   }
+  if(hasDocCols){
+    const cid = normalizeDigits(form.civilId.value||'').replace(/\s/g,'');
+    if(cid && !/^\d{12}$/.test(cid)){ fieldError(form,'civilId',t('err_civil_id')); return; }
+    data.civilId = cid; data.nationality = (form.nationality.value||'').trim();
+    data.residencyExpiry = form.residencyExpiry.value || null; data.passportExpiry = form.passportExpiry.value || null;
+  }
   if(hasOpeningLeaveCols){
     const ob = numField(form, 'leaveOpeningBalance');
     if(ob===null) return;
@@ -1963,6 +2176,7 @@ async function handleEmployeeSubmit(form){
     raise_applied: data.raiseApplied, raise_pct: data.raisePct, updated_at: new Date().toISOString()
   };
   if(hasOpeningLeaveCols){ dbRow.leave_opening_balance = data.leaveOpeningBalance; dbRow.leave_opening_date = data.leaveOpeningDate; }
+  if(hasDocCols){ dbRow.civil_id = data.civilId || null; dbRow.nationality = data.nationality || null; dbRow.residency_expiry = data.residencyExpiry; dbRow.passport_expiry = data.passportExpiry; }
   if(id){
     const { error } = await sb.from('employees').update(dbRow).eq('id', id);
     if(error){ toast(t('err_save_failed')+friendlyErr(error), 'error'); return; }
@@ -2099,7 +2313,7 @@ function renderDrawer(){
   h += '<header class="drw-head">'+
     '<button type="button" class="modal-close" data-action="close-drawer" aria-label="'+t('btn_close')+'">×</button>'+
     '<div class="drw-id"><h2 id="drwTitle" tabindex="-1">'+escapeHtml(emp.name)+'</h2>'+
-      '<div class="drw-meta">'+t('drw_no')+' '+numSpan(emp.no)+' · '+statusBadge+' · '+t('drw_since')+' '+fmtDate(emp.hireDate)+' · '+fmtNum(live.years,1)+' '+t('years_suffix')+'</div></div>'+
+      '<div class="drw-meta">'+t('drw_no')+' '+numSpan(emp.no)+' · '+statusBadge+' · <span class="nowrap">'+t('drw_since')+' '+fmtDate(emp.hireDate)+'</span> · <span class="nowrap">'+fmtNum(live.years,1)+' '+t('years_suffix')+'</span></div></div>'+
   '</header>';
   h += '<div class="drw-actions">'+
     btn('drw-add-leave', ICON.calendar, t('drw_act_leave'))+
@@ -2121,6 +2335,13 @@ function renderDrawer(){
         '</div><div class="note">'+t('drw_as_of_today')+'</div>')+
   '</div>';
   h += drawerSection(t('drw_breakdown'), '<div class="settle">'+settlementRowsHtml(emp, st)+'</div>');
+  if(hasDocCols){
+    h += drawerSection(t('doc_title'),
+      kv(t('doc_civil_id'), emp.civilId ? numSpan(escapeHtml(emp.civilId)) : '—')+
+      kv(t('doc_nationality'), emp.nationality ? escapeHtml(emp.nationality) : '—')+
+      (isKuwaiti(emp) ? '' : kv(t('doc_residency_expiry'), (emp.residencyExpiry ? fmtDate(emp.residencyExpiry) : '—')+docBadge(emp.residencyExpiry)))+
+      kv(t('doc_passport_expiry'), (emp.passportExpiry ? fmtDate(emp.passportExpiry) : '—')+docBadge(emp.passportExpiry)));
+  }
   h += drawerSection(t('drw_salary'),
     kv(t('drw_basic'), fmtKWD(emp.basic))+kv(t('drw_housing'), fmtKWD(emp.housing))+kv(t('drw_transport'), fmtKWD(emp.transport))+kv(t('drw_other'), fmtKWD(emp.other))+
     kv(t('drw_total'), fmtKWD(live.currentSalary), 'settle-strong')+
@@ -2708,7 +2929,7 @@ async function handleLeaveSubmit(form){
   if(data.days<=0){ fieldError(form,'days',t('err_days_positive')); return; }
 
   // Automatically split into paid (from available balance) vs unpaid (excess)
-  const available = leaveBalanceExcluding(employeeId, id||null);
+  const available = paidAvailableFor(employeeId, data.dateFrom, id||null);
   data.paidDays = round2(Math.min(totalDays, available));
   data.unpaidDays = round2(Math.max(0, totalDays - available));
 
@@ -3012,6 +3233,7 @@ function openDataManageModal(){
     '<div class="modal-header"><h3>'+t('dm_title')+'</h3><button type="button" class="modal-close" data-action="close-modal">×</button></div>'+
     '<div class="modal-body">'+
       accountSectionHtml()+
+      '<button type="button" class="btn-outline" data-action="open-holidays" style="margin-bottom:16px">'+t('hol_view_btn')+'</button>'+
       '<p class="dm-hint" style="margin-top:0">'+t('dm_hint')+'</p>'+
       '<div class="dm-actions" style="margin-top:10px">'+
         '<button class="btn-outline" data-action="export-json">'+t('btn_export_json')+'</button>'+
@@ -3156,6 +3378,17 @@ document.addEventListener('click', function(e){
   else if(action==='drw-add-eos') drawerQuickAdd('eos', id);
   else if(action==='drw-print') printSettlement(id);
   else if(action==='recalc-leave') runLeaveRecalc();
+  else if(action==='emp-sort'){
+    const k = btn.dataset.key;
+    uiState.empSort = (uiState.empSort.key===k) ? {key:k, dir:-uiState.empSort.dir} : {key:k, dir:(k==='name'||k==='no'||k==='hire')?1:-1};
+    renderEmployeesShell();
+    const again = document.querySelector('.th-sort[data-key="'+k+'"]'); if(again) again.focus({preventScroll:true});
+  }
+  else if(action==='open-holidays') openHolidaysModal();
+  else if(action==='goto-employees') switchTab('employees');
+  else if(action==='onb-dismiss'){ try{ localStorage.setItem(onbKey(), 'dismissed'); }catch(e){} renderDashboard(); }
+  else if(action==='onb-a2hs'){ try{ localStorage.setItem(onbKey()+':a2hs','1'); }catch(e){} document.getElementById('a2hsOverlay').classList.add('show'); renderDashboard(); }
+  else if(action==='onb-company'){ openDataManageModal(); }
   else if(action==='hol-delete') deleteHoliday(btn.dataset.hid);
   else if(action==='edit-employee') openEditEmployee(id);
   else if(action==='delete-employee') deleteEmployee(id);
