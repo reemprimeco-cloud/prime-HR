@@ -18,13 +18,19 @@ create policy "Holidays are readable by signed-in users"
   to authenticated
   using (true);
 
--- Only the Prime HR admin account may add, change or remove holidays (same admin as ADMIN_EMAIL in index.html)
+-- Only the Prime HR admin account may add, change or remove holidays (same admin as ADMIN_EMAIL in index.html).
+-- Separate write policies so they do not overlap the read policy.
 drop policy if exists "Holidays are managed by the admin" on public.public_holidays;
-create policy "Holidays are managed by the admin"
-  on public.public_holidays for all
-  to authenticated
+drop policy if exists "Admin inserts holidays" on public.public_holidays;
+drop policy if exists "Admin updates holidays" on public.public_holidays;
+drop policy if exists "Admin deletes holidays" on public.public_holidays;
+create policy "Admin inserts holidays" on public.public_holidays for insert to authenticated
+  with check (((select auth.jwt()) ->> 'email') = 'reem@primekw.net');
+create policy "Admin updates holidays" on public.public_holidays for update to authenticated
   using (((select auth.jwt()) ->> 'email') = 'reem@primekw.net')
   with check (((select auth.jwt()) ->> 'email') = 'reem@primekw.net');
+create policy "Admin deletes holidays" on public.public_holidays for delete to authenticated
+  using (((select auth.jwt()) ->> 'email') = 'reem@primekw.net');
 
 -- Seed: fixed holidays 2024-2028 and 2026 Islamic holidays (approx = pending official announcement)
 insert into public.public_holidays (date, name_ar, name_en, approx) values
