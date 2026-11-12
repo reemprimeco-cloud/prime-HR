@@ -1055,6 +1055,7 @@ const TR = {
   btn_end_service: {ar:'إنهاء الخدمة', en:'End service'},
   btn_reactivate: {ar:'إعادة تفعيل', en:'Reactivate'},
   btn_close: {ar:'إغلاق', en:'Close'},
+  err_write_uncertain: {ar:'انقطع الاتصال قبل وصول رد الحفظ. حدّثنا البيانات من الخادم، تأكد من القائمة قبل المحاولة مرة أخرى حتى لا يتكرر السجل.', en:'The connection dropped before the save was confirmed. Data has been refreshed from the server; check the list before trying again so nothing is entered twice.'},
   nav_payroll: {ar:'الرواتب', en:'Payroll'},
   pay_title: {ar:'كشف الرواتب', en:'Payroll'},
   pay_month: {ar:'الشهر', en:'Month'},
@@ -1863,6 +1864,18 @@ document.addEventListener('input', function(e){
     e.target.removeAttribute('aria-invalid'); e.target.removeAttribute('aria-describedby');
   }
 });
+function isNetworkErr(error){
+  const m = (error && error.message) || String(error || '');
+  return /failed to fetch|networkerror|network request failed|load failed/i.test(m) || (typeof navigator!=='undefined' && navigator.onLine===false);
+}
+/* A save whose response never arrived may still have been stored (the request can reach the server and
+   only the reply is lost). Reload from the server instead of claiming failure, so nothing is entered twice. */
+function writeFailed(prefix, error){
+  if(!isNetworkErr(error)){ toast(prefix+friendlyErr(error), 'error'); return; }
+  closeModal();
+  toast(t('err_write_uncertain'), 'error');
+  loadDataFromSupabase().then(function(ok){ if(ok) renderTabShell(uiState.activeTab); });
+}
 /* Human-readable message for Supabase / network errors */
 function friendlyErr(error){
   const m = (error && error.message) || String(error || '');
@@ -2498,7 +2511,7 @@ async function handleEmployeeSubmit(form){
   if(hasDocCols){ dbRow.civil_id = data.civilId || null; dbRow.nationality = data.nationality || null; dbRow.residency_expiry = data.residencyExpiry; dbRow.passport_expiry = data.passportExpiry; }
   if(id){
     const { error } = await sb.from('employees').update(dbRow).eq('id', id);
-    if(error){ toast(t('err_save_failed')+friendlyErr(error), 'error'); return; }
+    if(error){ writeFailed(t('err_save_failed'), error); return; }
     const emp = state.employees.find(function(e){ return e.id===id; });
     Object.assign(emp, data);
     toast(t('toast_emp_saved'));
@@ -2506,7 +2519,7 @@ async function handleEmployeeSubmit(form){
     dbRow.no = state.nextEmployeeNo;
     dbRow.status = 'active';
     const { data: inserted, error } = await sb.from('employees').insert(dbRow).select().single();
-    if(error){ toast(t('err_add_failed')+friendlyErr(error), 'error'); return; }
+    if(error){ writeFailed(t('err_add_failed'), error); return; }
     state.employees.push(mapEmployeeFromDb(inserted));
     state.nextEmployeeNo++;
     toast(t('toast_emp_added'));
@@ -2782,7 +2795,7 @@ async function handleEndServiceSubmit(form){
   if(new Date(serviceEndDate) < new Date(emp.hireDate)){ fieldError(form,'serviceEndDate',t('err_enddate_before_hire')); return; }
   const dbRow = { status:'terminated', service_end_date:serviceEndDate, termination_type:terminationTypeActual, updated_at:new Date().toISOString() };
   const { error } = await sb.from('employees').update(dbRow).eq('id', empId);
-  if(error){ toast(t('err_save_failed')+friendlyErr(error), 'error'); return; }
+  if(error){ writeFailed(t('err_save_failed'), error); return; }
   emp.status = 'terminated';
   emp.serviceEndDate = serviceEndDate;
   emp.terminationType = terminationTypeActual;
@@ -2798,7 +2811,7 @@ async function reactivateEmployee(id){
   if(!(await confirmAction({message:t('confirm_reactivate'), confirmLabel:t('btn_reactivate')}))) return;
   const dbRow = { status:'active', service_end_date:null, termination_type:null, updated_at:new Date().toISOString() };
   const { error } = await sb.from('employees').update(dbRow).eq('id', id);
-  if(error){ toast(t('err_save_failed')+friendlyErr(error), 'error'); return; }
+  if(error){ writeFailed(t('err_save_failed'), error); return; }
   emp.status = 'active';
   emp.serviceEndDate = null;
   emp.terminationType = null;
@@ -2932,12 +2945,12 @@ async function handleLoanSubmit(form){
   };
   if(id){
     const { error } = await sb.from('loans').update(dbRow).eq('id', id);
-    if(error){ toast(t('err_save_generic')+friendlyErr(error), 'error'); return; }
+    if(error){ writeFailed(t('err_save_generic'), error); return; }
     Object.assign(state.loans.find(function(l){ return l.id===id; }), data);
     toast(t('toast_saved'));
   } else {
     const { data: inserted, error } = await sb.from('loans').insert(dbRow).select().single();
-    if(error){ toast(t('err_add_generic')+friendlyErr(error), 'error'); return; }
+    if(error){ writeFailed(t('err_add_generic'), error); return; }
     state.loans.push(mapLoanFromDb(inserted));
     toast(t('toast_added'));
   }
@@ -2991,7 +3004,7 @@ async function handleLoanPaymentSubmit(form){
   if(amount > remaining + 0.001){ fieldError(form,'amount',t('err_amount_exceeds_remaining')); return; }
   const newDeducted = round3(safeNum(loan.deducted) + amount);
   const { error } = await sb.from('loans').update({ deducted: newDeducted }).eq('id', loanId);
-  if(error){ toast(t('err_save_generic')+friendlyErr(error), 'error'); return; }
+  if(error){ writeFailed(t('err_save_generic'), error); return; }
   loan.deducted = newDeducted;
   setSyncStatus(true);
   toast(t('toast_payment_recorded'));
@@ -3119,12 +3132,12 @@ async function handleEosSubmit(form){
   const dbRow = { employee_id: data.employeeId, date: data.date, month: data.month, paid: data.paid, notes: data.notes };
   if(id){
     const { error } = await sb.from('eos_payments').update(dbRow).eq('id', id);
-    if(error){ toast(t('err_save_generic')+friendlyErr(error), 'error'); return; }
+    if(error){ writeFailed(t('err_save_generic'), error); return; }
     Object.assign(state.eosPayments.find(function(p){ return p.id===id; }), data);
     toast(t('toast_saved'));
   } else {
     const { data: inserted, error } = await sb.from('eos_payments').insert(dbRow).select().single();
-    if(error){ toast(t('err_add_generic')+friendlyErr(error), 'error'); return; }
+    if(error){ writeFailed(t('err_add_generic'), error); return; }
     state.eosPayments.push(mapEosFromDb(inserted));
     toast(t('toast_added'));
   }
@@ -3308,12 +3321,12 @@ async function handleLeaveSubmit(form){
     paid_days:data.paidDays, unpaid_days:data.unpaidDays, notes:data.notes };
   if(id){
     const { error } = await sb.from('leave_records').update(dbRow).eq('id', id);
-    if(error){ toast(t('err_save_generic')+friendlyErr(error), 'error'); return; }
+    if(error){ writeFailed(t('err_save_generic'), error); return; }
     Object.assign(state.leaveRecords.find(function(r){ return r.id===id; }), data);
     toast(t('toast_saved'));
   } else {
     const { data: inserted, error } = await sb.from('leave_records').insert(dbRow).select().single();
-    if(error){ toast(t('err_add_generic')+friendlyErr(error), 'error'); return; }
+    if(error){ writeFailed(t('err_add_generic'), error); return; }
     state.leaveRecords.push(mapLeaveFromDb(inserted));
     toast(t('toast_leave_added'));
   }
