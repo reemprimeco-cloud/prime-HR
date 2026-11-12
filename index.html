@@ -1376,6 +1376,17 @@ function parseAmount(v){
   if(s === '') return NaN;
   return /^-?(\d+\.?\d*|\.\d+)$/.test(s) ? parseFloat(s) : NaN;
 }
+/* Text pasted from PDFs often uses Arabic presentation forms (U+FB50–U+FEFF): it looks right but breaks
+   search and sorting. NFKC maps them to the standard letters. */
+function normText(v){ return String(v==null?'':v).normalize('NFKC').replace(/\s+/g,' ').trim(); }
+/* Search key: standard letters, no tashkeel/tatweel, alef/yaa/taa-marbuta variants unified, lower case */
+function searchKey(v){
+  return normText(v).toLowerCase()
+    .replace(/[\u064B-\u0652\u0640]/g,'')
+    .replace(/[\u0622\u0623\u0625]/g,'\u0627')
+    .replace(/\u0649/g,'\u064A')
+    .replace(/\u0629/g,'\u0647');
+}
 function safeNum(v){ const n = parseAmount(v); return isNaN(n)?0:n; }
 /* Validate a numeric form field; shows an inline error and returns null when invalid */
 function numField(form, name, opts){
@@ -2330,8 +2341,8 @@ function renderEmployeesRows(){
   }
   const tbody = document.getElementById('employeesTbody');
   if(!tbody) return;
-  const q = uiState.employeeSearch.trim().toLowerCase();
-  let list = state.employees.filter(function(e){ return !q || e.name.toLowerCase().includes(q); });
+  const q = searchKey(uiState.employeeSearch);
+  let list = state.employees.filter(function(e){ return !q || searchKey(e.name).includes(q) || searchKey(e.nameEn).includes(q); });
   const derivedById = {};
   list.forEach(function(e){ derivedById[e.id] = computeEmployeeDerived(e); });
   const sk = uiState.empSort.key, dir = uiState.empSort.dir;
@@ -2454,7 +2465,7 @@ async function handleEmployeeSubmit(form){
   const fd = new FormData(form);
   const id = fd.get('recordId');
   const data = {
-    name: (fd.get('name')||'').trim(),
+    name: normText(fd.get('name')),
     hireDate: fd.get('hireDate'),
     basic: safeNum(fd.get('basic')),
     housing: safeNum(fd.get('housing')),
