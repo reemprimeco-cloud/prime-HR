@@ -380,6 +380,7 @@ html[dir="ltr"] .num{direction:ltr;}
 .drw-list .slip-btn{width:30px;height:30px;}
 @media print{
   .cert-to{font-weight:700;margin:18px 0 10px;}
+  .lf-return{margin-top:34px;padding-top:16px;border-top:1px dashed #999;}
   .cert-body{line-height:2;margin:10px 0;}
   .cert-table{max-width:420px;margin:14px 0;}
 }
@@ -1127,6 +1128,24 @@ const TR = {
   cert_cid: {ar:'، حامل البطاقة المدنية رقم {v}', en:', Civil ID {v}'},
   cert_bank: {ar:'ويُحوَّل الراتب شهرياً إلى حساب الموظف لدى {b}.', en:'The salary is transferred monthly to the employee\u2019s account with {b}.'},
   cert_close: {ar:'وقد أُعطيت هذه الشهادة بناءً على طلب الموظف، دون أدنى مسؤولية على الشركة.', en:'This certificate was issued at the employee\u2019s request, without any liability on the company.'},
+  lf_title: {ar:'نموذج إجازة سنوية', en:'Annual Leave Form'},
+  lf_print: {ar:'طباعة نموذج الإجازة', en:'Print leave form'},
+  lf_from: {ar:'من تاريخ', en:'From'},
+  lf_to: {ar:'إلى تاريخ', en:'To'},
+  lf_days: {ar:'أيام العمل', en:'Working days'},
+  lf_paid: {ar:'مدفوعة', en:'Paid'},
+  lf_unpaid: {ar:'بدون أجر', en:'Unpaid'},
+  lf_return: {ar:'تاريخ العودة المتوقع', en:'Expected return'},
+  lf_balance: {ar:'رصيد الإجازات المتبقي حتى تاريخه', en:'Leave balance remaining to date'},
+  lf_note_rest: {ar:'تُحسب أيام العمل فقط، ولا تدخل الجمعة والسبت والعطل الرسمية ضمن الإجازة.', en:'Working days only. Fridays, Saturdays and official holidays are not counted.'},
+  lf_sign_manager: {ar:'المدير المباشر', en:'Direct manager'},
+  lf_return_title: {ar:'إقرار العودة من الإجازة', en:'Return from leave'},
+  lf_return_text: {ar:'أقر بأنني عدت إلى العمل بتاريخ ____ / ____ / ________', en:'I confirm I returned to work on ____ / ____ / ________'},
+  exp_title: {ar:'شهادة خبرة', en:'Experience Certificate'},
+  drw_act_exp: {ar:'شهادة خبرة', en:'Experience certificate'},
+  exp_body: {ar:'تشهد {c} بأن {n}{x}، قد عمل لديها خلال الفترة من {f} إلى {t}، أي ما مجموعه {y}، وقد انتهت خدمته بتاريخ {t}.', en:'{c} certifies that {n}{x} was employed with us from {f} to {t}, a total of {y}. Their service ended on {t}.'},
+  exp_body_active: {ar:'تشهد {c} بأن {n}{x}، يعمل لديها منذ {f} وما زال على رأس عمله حتى تاريخه، أي ما مجموعه {y} حتى الآن.', en:'{c} certifies that {n}{x} has been employed with us since {f} and remains in service to date, a total of {y} so far.'},
+  lf_details: {ar:'بيانات الإجازة', en:'Leave details'},
   cert_terminated: {ar:'لا تصدر شهادة الراتب لموظف انتهت خدمته. استخدم كشف المخالصة.', en:'Salary certificates are for active employees. Use the settlement statement instead.'},
   pay_slip: {ar:'قسيمة الراتب', en:'Payslip'},
   slip_title: {ar:'قسيمة راتب', en:'Payslip'},
@@ -2498,11 +2517,7 @@ function printSalaryCertificate(id){
   const plain = function(n){ return fmtKWD(n).replace(/<[^>]+>/g,''); };
   const en = currentLang==='en';
   const name = en && emp.nameEn ? emp.nameEn : emp.name;
-  let extra = '';
-  if(emp.nationality && !(en && /[\u0600-\u06FF]/.test(emp.nationality))) extra += t('cert_nat').replace('{v}', escapeHtml(emp.nationality));
-  if(emp.civilId) extra += t('cert_cid').replace('{v}', '<bdi dir="ltr">'+escapeHtml(emp.civilId)+'</bdi>');
-  if(emp.jobTitle && !(en && /[\u0600-\u06FF]/.test(emp.jobTitle))) extra += t('cert_job').replace('{v}', escapeHtml(emp.jobTitle));
-  if(en && extra) extra += ',';
+  const extra = certIdentity(emp, en);
   const bank = bankName(emp.bankCode);
   const row = function(label, val){ return '<tr><th>'+label+'</th><td>'+fmtKWD(val)+'</td></tr>'; };
   let h = '<section class="prt cert">';
@@ -2520,6 +2535,81 @@ function printSalaryCertificate(id){
   h += '<footer class="prt-foot">'+t('prt_footer')+'</footer></section>';
   document.getElementById('printSheet').innerHTML = h;
   document.title = t('cert_title')+' — '+name;
+  window.print();
+}
+function certIdentity(emp, en){
+  let extra = '';
+  if(emp.nationality && !(en && /[\u0600-\u06FF]/.test(emp.nationality))) extra += t('cert_nat').replace('{v}', escapeHtml(emp.nationality));
+  if(emp.civilId) extra += t('cert_cid').replace('{v}', '<bdi dir="ltr">'+escapeHtml(emp.civilId)+'</bdi>');
+  if(emp.jobTitle && !(en && /[\u0600-\u06FF]/.test(emp.jobTitle))) extra += t('cert_job').replace('{v}', escapeHtml(emp.jobTitle));
+  if(en && extra) extra += ',';
+  return extra;
+}
+function servicePeriod(from, to){
+  const a = new Date(from+'T00:00:00Z'), b = new Date(to+'T00:00:00Z');
+  let months = (b.getUTCFullYear()-a.getUTCFullYear())*12 + (b.getUTCMonth()-a.getUTCMonth());
+  if(b.getUTCDate() < a.getUTCDate()) months--;
+  months = Math.max(0, months);
+  const y = Math.floor(months/12), m = months%12;
+  if(currentLang==='en'){
+    const ep = function(n, w){ return n+' '+w+(n===1?'':'s'); };
+    return [y?ep(y,'year'):'', m?ep(m,'month'):''].filter(Boolean).join(' and ') || ep(0,'month');
+  }
+  const ar = function(n, one, two, few, many){ return n===1 ? one : n===2 ? two : (n>=3 && n<=10) ? n+' '+few : n+' '+many; };
+  const parts = [y ? ar(y,'سنة واحدة','سنتان','سنوات','سنة') : '', m ? ar(m,'شهر واحد','شهران','أشهر','شهراً') : ''].filter(Boolean);
+  return parts.join(' و') || 'أقل من شهر';
+}
+function printExperienceCertificate(id){
+  const emp = state.employees.find(function(e){ return e.id===id; });
+  if(!emp || !emp.hireDate) return;
+  const isTerm = emp.status==='terminated' && emp.serviceEndDate;
+  const en = currentLang==='en';
+  const company = currentCompanyName || 'Prime HR';
+  const name = en && emp.nameEn ? emp.nameEn : emp.name;
+  const end = isTerm ? emp.serviceEndDate : todayStr();
+  const body = t(isTerm ? 'exp_body' : 'exp_body_active').replace('{c}', '<b>'+escapeHtml(company)+'</b>').replace('{n}', '<b>'+escapeHtml(name)+'</b>')
+    .replace('{x}', certIdentity(emp, en)).replace('{f}', '<b>'+fmtDate(emp.hireDate)+'</b>').split('{t}').join('<b>'+fmtDate(end)+'</b>')
+    .replace('{y}', '<b>'+servicePeriod(emp.hireDate, end)+'</b>');
+  let h = '<section class="prt cert">';
+  h += '<header class="prt-head"><div><div class="prt-company">'+escapeHtml(company)+'</div><h1>'+t('exp_title')+'</h1></div>'+
+       '<div class="prt-issued">'+t('prt_issued')+'<br><b>'+fmtDate(todayStr())+'</b></div></header>';
+  h += '<p class="cert-to">'+t('cert_to')+'</p><p class="cert-body">'+body+'</p><p class="cert-body">'+t('cert_close')+'</p>';
+  h += '<div class="prt-sign"><div>'+t('prt_sign_employer')+'</div><div>'+t('prt_stamp')+'</div></div>';
+  h += '<footer class="prt-foot">'+t('prt_footer')+'</footer></section>';
+  document.getElementById('printSheet').innerHTML = h;
+  document.title = t('exp_title')+' — '+name;
+  window.print();
+}
+function printLeaveForm(recId){
+  const r = state.leaveRecords.find(function(x){ return x.id===recId; });
+  if(!r) return;
+  const emp = state.employees.find(function(e){ return e.id===r.employeeId; });
+  if(!emp) return;
+  const company = currentCompanyName || 'Prime HR';
+  const d = computeEmployeeDerived(emp);
+  const paid = safeNum(r.paidDays!=null ? r.paidDays : r.days), unpaid = safeNum(r.unpaidDays);
+  const cell = function(label, value){ return '<tr><th>'+label+'</th><td>'+value+'</td></tr>'; };
+  let h = '<section class="prt">';
+  h += '<header class="prt-head"><div><div class="prt-company">'+escapeHtml(company)+'</div><h1>'+t('lf_title')+'</h1></div>'+
+       '<div class="prt-issued">'+t('prt_issued')+'<br><b>'+fmtDate(todayStr())+'</b></div></header>';
+  h += '<h2>'+t('prt_employee')+'</h2><table class="prt-kv">'+
+    cell(t('col_name'), escapeHtml(emp.name))+cell(t('drw_no'), numSpan(emp.no))+
+    (emp.jobTitle ? cell(t('field_job_title'), escapeHtml(emp.jobTitle)) : '')+
+    (emp.civilId ? cell(t('doc_civil_id'), numSpan(escapeHtml(emp.civilId))) : '')+
+    cell(t('col_hire_date'), fmtDate(emp.hireDate))+'</table>';
+  h += '<h2>'+t('lf_details')+'</h2><table class="prt-kv">'+
+    cell(t('lf_from'), fmtDate(r.dateFrom))+cell(t('lf_to'), fmtDate(r.dateTo))+
+    cell(t('lf_days'), numSpan(fmtNum(r.days,1))+' '+t('day_suffix')+(unpaid ? ' ('+t('lf_paid')+' '+numSpan(fmtNum(paid,1))+' · '+t('lf_unpaid')+' '+numSpan(fmtNum(unpaid,1))+')' : ''))+
+    cell(t('lf_return'), fmtDate(nextWorkingDay(r.dateTo)))+
+    cell(t('lf_balance'), numSpan(fmtNum(d.leaveBalance,1))+' '+t('day_suffix'))+
+    (r.notes ? cell(t('col_notes'), escapeHtml(r.notes)) : '')+'</table>';
+  h += '<p class="prt-legal">'+t('lf_note_rest')+'</p>';
+  h += '<div class="prt-sign"><div>'+t('prt_sign_employee')+'</div><div>'+t('lf_sign_manager')+'</div><div>'+t('prt_sign_employer')+'</div></div>';
+  h += '<h2 class="lf-return">'+t('lf_return_title')+'</h2><p class="cert-body">'+t('lf_return_text')+'</p>';
+  h += '<div class="prt-sign"><div>'+t('prt_sign_employee')+'</div><div>'+t('lf_sign_manager')+'</div></div>';
+  h += '<footer class="prt-foot">'+t('prt_footer')+'</footer></section>';
+  document.getElementById('printSheet').innerHTML = h;
+  document.title = t('lf_title')+' — '+emp.name;
   window.print();
 }
 function printPayslips(empId, month){
@@ -3027,6 +3117,7 @@ function renderDrawer(){
     btn('edit-employee', ICON.edit, t('btn_edit'))+
     btn('drw-print', ICON.print, t('drw_act_print'))+
     (isTerm ? '' : btn('drw-cert', ICON.print, t('drw_act_cert')))+
+    btn('drw-exp', ICON.print, t('drw_act_exp'))+
     (isTerm ? btn('reactivate-employee', ICON.reactivate, t('btn_reactivate')) : btn('open-end-service', ICON.endService, t('btn_end_service'), 'warn'))+
   '</div>';
   h += '<div class="drw-body">';
@@ -3640,6 +3731,7 @@ function renderLeaveRows(){
       '<td>'+splitCell+'</td>'+
       '<td>'+escapeHtml(r.notes||'—')+'</td>'+
       '<td><div class="cell-actions">'+
+        iconBtn('print-leave','data-id',r.id,ICON.print,t('lf_print'))+
         iconBtn('edit-leave','data-id',r.id,ICON.edit,t('btn_edit'))+
         iconBtn('delete-leave','data-id',r.id,ICON.trash,t('btn_delete'),'danger')+
       '</div></td></tr>';
@@ -4184,6 +4276,8 @@ document.addEventListener('click', function(e){
   else if(action==='delete-eos') deleteEos(id);
   else if(action==='open-add-leave') openAddLeave();
   else if(action==='edit-leave') openEditLeave(id);
+  else if(action==='print-leave') printLeaveForm(id);
+  else if(action==='drw-exp') printExperienceCertificate(id);
   else if(action==='delete-leave') deleteLeaveRec(id);
   else if(action==='open-data-manage') openDataManageModal();
   else if(action==='export-json') exportJsonBackup();
