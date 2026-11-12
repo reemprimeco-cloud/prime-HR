@@ -415,6 +415,18 @@ th[aria-sort="descending"] .th-sort.on::after{content:'▼';}
 .doc-flag{display:inline-block;margin-inline-start:8px;padding:2px 8px;border-radius:20px;background:var(--amber-bg);color:var(--amber);font-size:.7rem;font-weight:700;vertical-align:1px;}
 
 /* Document alerts */
+.followups{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:22px;}
+.followups h2{margin:0 0 8px;font-size:.95rem;color:var(--navy);}
+.followups ul{list-style:none;margin:0;padding:0;}
+.followups li{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding:9px 0 9px;padding-inline-start:12px;border-top:1px solid var(--border);font-size:.84rem;position:relative;}
+.followups li:first-child{border-top:0;}
+.followups li::before{content:'';position:absolute;inset-inline-start:0;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--blue);}
+.followups li.fu-warn::before{background:var(--amber);}
+.followups li.fu-ok::before{background:var(--green);}
+.followups li > span:not(.fu-badge){color:var(--text-muted);flex:1;min-width:160px;}
+.followups li > b{flex:1;min-width:160px;color:var(--text);}
+.followups .fu-badge{font-weight:700;white-space:nowrap;}
+.followups .btn-outline{width:auto;min-height:36px;padding:6px 14px;}
 .doc-alerts{background:var(--surface);border:1px solid #f2d9b8;border-radius:var(--radius);padding:14px 16px;margin-bottom:22px;}
 .doc-alerts h2{margin:0 0 8px;font-size:.95rem;color:var(--amber);}
 .doc-alerts ul{list-style:none;margin:0;padding:0;}
@@ -1209,6 +1221,17 @@ const TR = {
   doc_expired: {ar:'منتهية', en:'Expired'},
   doc_days_left: {ar:'بعد {n} يوم', en:'in {n} days'},
   doc_alert_short: {ar:'وثيقة تنتهي', en:'Document expiring'},
+  fu_title: {ar:'متابعات', en:'Follow-ups'},
+  fu_pay_prev: {ar:'كشف رواتب {m} لم يُعتمد بعد', en:'{m} payroll is not approved yet'},
+  fu_pay_cur: {ar:'كشف رواتب {m} جاهز للمراجعة والاعتماد', en:'{m} payroll is ready to review and approve'},
+  fu_pay_open: {ar:'افتح الكشف', en:'Open payroll'},
+  fu_debt: {ar:'دين على الشركة للموظف', en:'Company owes this employee'},
+  fu_on_leave: {ar:'في إجازة — يعود {d}', en:'On leave — back {d}'},
+  fu_m6: {ar:'يكمل 6 أشهر: تصبح إجازاته السنوية مدفوعة (م.70)', en:'Completes 6 months: annual leave becomes paid (Art. 70)'},
+  fu_y3: {ar:'يكمل 3 سنوات: يستحق نصف المكافأة إن استقال (م.53)', en:'Completes 3 years: half EOS on resignation (Art. 53)'},
+  fu_y5: {ar:'يكمل 5 سنوات: المكافأة شهر عن كل سنة بعدها، وثلثاها عند الاستقالة (م.51، 53)', en:'Completes 5 years: a month per year from now on, two-thirds on resignation (Art. 51, 53)'},
+  fu_y10: {ar:'يكمل 10 سنوات: المكافأة كاملة حتى عند الاستقالة (م.53)', en:'Completes 10 years: full EOS even on resignation (Art. 53)'},
+  fu_today: {ar:'اليوم', en:'today'},
   doc_alerts_title: {ar:'وثائق منتهية أو تنتهي خلال 60 يوماً ({n})', en:'Documents expired or expiring within 60 days ({n})'},
   doc_more: {ar:'و{n} أخرى. افتح صفحة الموظف للتفاصيل.', en:'and {n} more. Open the employee for details.'},
   err_civil_id: {ar:'الرقم المدني يتكون من 12 رقماً', en:'Civil ID must be 12 digits'},
@@ -2162,6 +2185,7 @@ function renderDashboard(){
   html += '<div class="kpi-card"><div class="label">'+t('kpi_total_loans')+'</div><div class="value">'+fmtKWD(totalLoans)+'</div></div>';
   html += '<div class="kpi-card"><div class="label">'+t('kpi_total_eos_paid')+'</div><div class="value">'+fmtKWD(totalEosPaid)+'</div></div>';
   html += '</div>';
+  html += followUpsHtml();
   html += docAlertsHtml();
   html += '<div class="section-toolbar"><h2>'+t('dash_top5')+'</h2></div>';
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
@@ -2174,6 +2198,57 @@ function renderDashboard(){
   root.innerHTML = html;
 }
 
+function addMonthsStr(d, n){
+  const y = +d.slice(0,4), m = +d.slice(5,7), day = +d.slice(8,10);
+  const x = new Date(Date.UTC(y, m-1+n, day));
+  return x.getUTCFullYear()+'-'+String(x.getUTCMonth()+1).padStart(2,'0')+'-'+String(x.getUTCDate()).padStart(2,'0');
+}
+const FU_SOON_DAYS = 45;
+function nextWorkingDay(d){
+  const x = new Date(d+'T00:00:00Z');
+  for(let i=0; i<30; i++){ x.setUTCDate(x.getUTCDate()+1); const k = x.toISOString().slice(0,10); if(WEEKLY_REST_DAYS.indexOf(x.getUTCDay())===-1 && !holidaySet.has(k)) return k; }
+  return x.toISOString().slice(0,10);
+}
+/* Things that need attention: unapproved payroll, debts owed, people on leave, labour-law milestones */
+function followUpsHtml(){
+  const items = [];
+  const today = todayStr();
+  if(hasPayrollRuns){
+    const now = new Date();
+    const prev = monthStr(new Date(now.getFullYear(), now.getMonth()-1, 1));
+    const cur = monthStr(now);
+    const hiredBy = function(m){ const b = monthBounds(m); return state.employees.some(function(e){ return e.status!=='terminated' && e.hireDate && e.hireDate <= b.to; }); };
+    if(!getPayrollRun(prev) && hiredBy(prev)) items.push({tone:'warn', html:'<b>'+t('fu_pay_prev').replace('{m}', escapeHtml(payrollMonthLabel(prev)))+'</b>', cta:'<button type="button" class="btn-outline" data-action="dash-pay" data-m="'+prev+'">'+t('fu_pay_open')+'</button>'});
+    if(!getPayrollRun(cur) && now.getDate() >= 25 && hiredBy(cur)) items.push({tone:'info', html:'<b>'+t('fu_pay_cur').replace('{m}', escapeHtml(payrollMonthLabel(cur)))+'</b>', cta:'<button type="button" class="btn-outline" data-action="dash-pay" data-m="'+cur+'">'+t('fu_pay_open')+'</button>'});
+  }
+  const active = state.employees.filter(function(e){ return e.status!=='terminated'; });
+  if(hasArrears){
+    active.forEach(function(e){ const owed = getEmployeeArrears(e.id); if(owed > 0.0005) items.push({tone:'warn', emp:e, html:'<span>'+t('fu_debt')+'</span>', badge:fmtKWD(owed)}); });
+  }
+  state.leaveRecords.forEach(function(r){
+    if(r.dateFrom && r.dateTo && r.dateFrom <= today && r.dateTo >= today){
+      const e = active.find(function(x){ return x.id===r.employeeId; });
+      if(e) items.push({tone:'info', emp:e, html:'<span>'+t('fu_on_leave').replace('{d}', fmtDate(nextWorkingDay(r.dateTo)))+'</span>'});
+    }
+  });
+  const milestones = [[6,'fu_m6'],[36,'fu_y3'],[60,'fu_y5'],[120,'fu_y10']];
+  const ms = [];
+  active.forEach(function(e){
+    if(!e.hireDate) return;
+    milestones.forEach(function(mm){
+      const d = addMonthsStr(e.hireDate, mm[0]); const n = daysUntil(d);
+      if(n !== null && n >= 0 && n <= FU_SOON_DAYS) ms.push({tone:'ok', emp:e, days:n, html:'<span>'+t(mm[1])+' · '+fmtDate(d)+'</span>', badge: n===0 ? t('fu_today') : t('doc_days_left').replace('{n}', n)});
+    });
+  });
+  ms.sort(function(a,b){ return a.days-b.days; });
+  const all = items.concat(ms);
+  if(!all.length) return '';
+  return '<section class="followups" aria-labelledby="fuTitle"><h2 id="fuTitle">'+t('fu_title')+' ('+numSpan(all.length)+')</h2><ul>'+
+    all.slice(0,10).map(function(x){
+      return '<li class="fu-'+x.tone+'">'+(x.emp ? '<button type="button" class="name-link" data-action="open-employee" data-id="'+x.emp.id+'">'+escapeHtml(x.emp.name)+'</button>' : '')+
+        x.html+(x.badge ? '<span class="fu-badge">'+x.badge+'</span>' : '')+(x.cta||'')+'</li>';
+    }).join('')+'</ul>'+(all.length>10?'<p class="drw-note">'+t('doc_more').replace('{n}', all.length-10)+'</p>':'')+'</section>';
+}
 function docAlertsHtml(){
   if(!hasDocCols) return '';
   const rows = [];
@@ -4081,6 +4156,7 @@ document.addEventListener('click', function(e){
   else if(action==='pay-slip') printPayslips(id);
   else if(action==='drw-slip') printPayslips(id, btn.dataset.m);
   else if(action==='drw-cert') printSalaryCertificate(id);
+  else if(action==='dash-pay'){ uiState.payMonth = btn.dataset.m; switchTab('payroll'); }
   else if(action==='pay-goto'){ uiState.payMonth = btn.dataset.m; renderPayrollShell(); const pm = document.getElementById('payMonth'); if(pm) pm.focus(); }
   else if(action==='pay-slips-all') printPayslips(null);
   else if(action==='emp-sort'){
