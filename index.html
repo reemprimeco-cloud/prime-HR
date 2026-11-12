@@ -366,6 +366,7 @@ html[dir="ltr"] .num{direction:ltr;}
 .notice-bar .btn-outline{width:auto;flex-shrink:0;}
 .slip-btn{margin-inline-start:8px;vertical-align:middle;background:none;border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;color:var(--navy);cursor:pointer;}
 .slip-btn svg{width:16px;height:16px;}
+.drw-job{color:var(--navy);font-weight:700;}
 .pay-history-card{margin-top:22px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
 .pay-history-card h3{margin:0 0 10px;font-size:1rem;color:var(--navy);}
 .pay-history{list-style:none;margin:0;padding:0;}
@@ -1104,6 +1105,10 @@ const TR = {
   drw_pay_none: {ar:'لا توجد رواتب معتمدة لهذا الموظف بعد.', en:'No approved payroll for this employee yet.'},
   drw_act_cert: {ar:'شهادة راتب', en:'Salary certificate'},
   cert_title: {ar:'شهادة راتب', en:'Salary Certificate'},
+  cert_job: {ar:'، بوظيفة «{v}»', en:', working as {v}'},
+  field_job_title: {ar:'المسمى الوظيفي', en:'Job title'},
+  placeholder_job_title: {ar:'مثال: محاسب، مندوب مبيعات، فني طباعة', en:'e.g. Accountant, Sales rep, Print technician'},
+  col_job_title: {ar:'المسمى الوظيفي', en:'Job title'},
   cert_to: {ar:'إلى من يهمه الأمر', en:'To whom it may concern'},
   cert_body: {ar:'تشهد {c} بأن {n}{x}، يعمل لديها منذ {h} وما زال على رأس عمله حتى تاريخه، ويتقاضى راتباً شهرياً إجمالياً قدره {s}، تفصيله كالتالي:', en:'{c} certifies that {n}{x} has been employed with us since {h} and remains in service to date, receiving a total monthly salary of {s}, broken down as follows:'},
   cert_nat: {ar:'، {v} الجنسية', en:', a {v} national'},
@@ -1794,6 +1799,7 @@ function leaveBalanceExcluding(empId, excludeRecordId){
 function defaultState(){ return {employees:[], loans:[], eosPayments:[], leaveRecords:[], arrears:[], payrollRuns:[], nextEmployeeNo:1}; }
 let hasArrears = false;
 let hasPayrollRuns = false;
+let hasJobTitle = false;
 let state = defaultState();
 
 /* DB row <-> app object mappers (DB uses snake_case, app uses camelCase) */
@@ -1802,7 +1808,7 @@ function mapEmployeeFromDb(r){
     transport:Number(r.transport), other:Number(r.other),
     status: r.status || 'active',
     leaveOpeningBalance: r.leave_opening_balance!=null ? Number(r.leave_opening_balance) : null,
-    civilId: r.civil_id || '', nationality: r.nationality || '',
+    civilId: r.civil_id || '', nationality: r.nationality || '', jobTitle: r.job_title || '',
     nameEn: r.name_en || '', bankCode: r.bank_code || '', bankAccount: r.bank_account || '',
     residencyExpiry: r.residency_expiry || null, passportExpiry: r.passport_expiry || null,
     leaveOpeningDate: r.leave_opening_date || null,
@@ -1857,12 +1863,13 @@ async function loadDataFromSupabase(){
   state.eosPayments = eosRes.data.map(mapEosFromDb);
   state.leaveRecords = leaveRes.data.map(mapLeaveFromDb);
   const docProbe = sb.from('employees').select('civil_id').limit(1).then(function(r){ hasDocCols = !r.error; }, function(){ hasDocCols = false; });
+  const jobProbe = sb.from('employees').select('job_title').limit(1).then(function(r){ hasJobTitle = !r.error; }, function(){ hasJobTitle = false; });
   const arrearsLoad = sb.from('salary_arrears').select('*').then(function(r){
     hasArrears = !r.error;
     state.arrears = r.error ? [] : (r.data||[]).map(function(x){ return {id:x.id, employeeId:x.employee_id, month:x.month, kind:x.kind, amount:Number(x.amount), notes:x.notes||''}; });
   }, function(){ hasArrears = false; state.arrears = []; });
   const runsLoad = loadPayrollRuns();
-  await holidaysLoad; await openingProbe; await docProbe; await arrearsLoad; await runsLoad;
+  await holidaysLoad; await openingProbe; await docProbe; await jobProbe; await arrearsLoad; await runsLoad;
   state.nextEmployeeNo = state.employees.reduce(function(m,e){ return Math.max(m, e.no); }, 0) + 1;
   setSyncStatus(true);
   return true;
@@ -2240,6 +2247,13 @@ const fmtDays = function(n){ return fmtNum(n,1)+' <small class="unit">'+t('day_s
 /* ============ Payroll (monthly) + NBK salary file ============ */
 /* Bank codes exactly as in NBK's salary-file template ("Bank Codes" sheet) */
 const BANK_CODES = [['NBK','National Bank of Kuwait'],['BNP','BNP Paribas'],['BOB','Boubyan Bank'],['BUR','Burgan Bank of Kuwait'],['CBK','Central Bank of Kuwait'],['CIT','CitiBank Kuwait'],['COB','Commercial Bank of Kuwait'],['DOH','Doha Bank'],['GBK','Gulf Bank'],['HSB','HSBC'],['IBK','Industrial Bank of Kuwait'],['ABK','Al Ahli Bank of Kuwait'],['BBK','Bank of Bahrain and Kuwait'],['KFH','Kuwait Finance House'],['KIB','Kuwait International Bank'],['MSQ','Masqat Bank'],['MSR','Mashreq Bank'],['NBA','National Bank of Abu Dhabi'],['QNB','Qatar National Bank Kuwait'],['RAJ','Al-Rajhi Bank'],['SCB','Saving'],['WRB','Warba Bank'],['UNB','Union National Bank - Kuwait'],['ICK','Industrial and Commercial Bank of China - Kuwait']];
+const BANK_AR = {NBK:'بنك الكويت الوطني', BNP:'بي إن بي باريبا', BOB:'بنك بوبيان', BUR:'بنك برقان', CBK:'بنك الكويت المركزي', CIT:'سيتي بنك الكويت', COB:'البنك التجاري الكويتي', DOH:'بنك الدوحة', GBK:'بنك الخليج', HSB:'بنك إتش إس بي سي', IBK:'بنك الكويت الصناعي', ABK:'البنك الأهلي الكويتي', BBK:'بنك البحرين والكويت', KFH:'بيت التمويل الكويتي', KIB:'بنك الكويت الدولي', MSQ:'بنك مسقط', MSR:'بنك المشرق', NBA:'بنك أبوظبي الوطني', QNB:'بنك قطر الوطني', RAJ:'مصرف الراجحي', WRB:'بنك وربة', UNB:'بنك الاتحاد الوطني', ICK:'البنك الصناعي والتجاري الصيني'};
+function bankName(code){
+  if(!code) return '';
+  if(currentLang!=='en' && BANK_AR[code]) return BANK_AR[code];
+  const b = BANK_CODES.find(function(x){ return x[0]===code; });
+  return b ? b[1] : code;
+}
 /* IBAN bank identifiers we are confident about (others: choose the bank manually) */
 const IBAN_BANKS = {NBOK:'NBK', GULB:'GBK', COMB:'COB', KFHO:'KFH', BBYN:'BOB', BRGN:'BUR', ABKK:'ABK', KWIB:'KIB', WRBA:'WRB'};
 function bankFromIban(iban){ return IBAN_BANKS[String(iban).slice(4,8)] || ''; }
@@ -2299,14 +2313,14 @@ function loadPayrollRuns(){
 function getPayrollRun(m){ return (state.payrollRuns||[]).find(function(r){ return r.month===m; }) || null; }
 const SNAP_KEYS = ['workedDays','monthDays','gross','bonus','unpaidDays','unpaid','loan','other','repay','defer','net'];
 function snapshotLine(l){
-  const o = {empId:l.emp.id, no:l.emp.no, name:l.emp.name, nameEn:l.emp.nameEn||'', civilId:l.emp.civilId||'', bankCode:l.emp.bankCode||'', bankAccount:l.emp.bankAccount||'', parts:l.parts};
+  const o = {empId:l.emp.id, no:l.emp.no, name:l.emp.name, nameEn:l.emp.nameEn||'', jobTitle:l.emp.jobTitle||'', civilId:l.emp.civilId||'', bankCode:l.emp.bankCode||'', bankAccount:l.emp.bankAccount||'', parts:l.parts};
   SNAP_KEYS.forEach(function(k){ o[k] = l[k]; });
   return o;
 }
 function lineFromSnapshot(sn){
   const live = state.employees.find(function(e){ return e.id===sn.empId; });
   // Bank/identity details as they were when the month was approved (what the bank file used)
-  const emp = Object.assign({}, live || {id:sn.empId}, {no:sn.no, name:sn.name, nameEn:sn.nameEn, civilId:sn.civilId, bankCode:sn.bankCode, bankAccount:sn.bankAccount});
+  const emp = Object.assign({}, live || {id:sn.empId}, {no:sn.no, name:sn.name, nameEn:sn.nameEn, jobTitle: sn.jobTitle!=null ? sn.jobTitle : ((live&&live.jobTitle)||''), civilId:sn.civilId, bankCode:sn.bankCode, bankAccount:sn.bankAccount});
   const l = {emp:emp, parts:sn.parts||{}, frozen:true, loanRemaining:0, owedBefore:0, prorated: sn.workedDays < sn.monthDays, missing:[]};
   SNAP_KEYS.forEach(function(k){ l[k] = safeNum(sn[k]); });
   if(!emp.nameEn) l.missing.push(t('bank_name_en'));
@@ -2412,8 +2426,9 @@ function printSalaryCertificate(id){
   let extra = '';
   if(emp.nationality && !(en && /[\u0600-\u06FF]/.test(emp.nationality))) extra += t('cert_nat').replace('{v}', escapeHtml(emp.nationality));
   if(emp.civilId) extra += t('cert_cid').replace('{v}', '<bdi dir="ltr">'+escapeHtml(emp.civilId)+'</bdi>');
+  if(emp.jobTitle && !(en && /[\u0600-\u06FF]/.test(emp.jobTitle))) extra += t('cert_job').replace('{v}', escapeHtml(emp.jobTitle));
   if(en && extra) extra += ',';
-  const bank = emp.bankCode ? (BANK_CODES.find(function(b){ return b[0]===emp.bankCode; })||[emp.bankCode, emp.bankCode])[1] : '';
+  const bank = bankName(emp.bankCode);
   const row = function(label, val){ return '<tr><th>'+label+'</th><td>'+fmtKWD(val)+'</td></tr>'; };
   let h = '<section class="prt cert">';
   h += '<header class="prt-head"><div><div class="prt-company">'+escapeHtml(company)+'</div><h1>'+t('cert_title')+'</h1></div>'+
@@ -2448,6 +2463,7 @@ function printPayslips(empId, month){
     h += '<table class="prt-kv">'+
       '<tr><th>'+t('col_name')+'</th><td>'+escapeHtml(l.emp.name)+(l.emp.nameEn?' — <span dir="ltr">'+escapeHtml(l.emp.nameEn)+'</span>':'')+'</td></tr>'+
       '<tr><th>'+t('drw_no')+'</th><td>'+numSpan(l.emp.no)+'</td></tr>'+
+      (l.emp.jobTitle ? '<tr><th>'+t('field_job_title')+'</th><td>'+escapeHtml(l.emp.jobTitle)+'</td></tr>' : '')+
       (l.emp.civilId ? '<tr><th>'+t('doc_civil_id')+'</th><td>'+numSpan(escapeHtml(l.emp.civilId))+'</td></tr>' : '')+
       (l.emp.bankAccount ? '<tr><th>'+t('bank_account')+'</th><td><bdi dir="ltr">'+escapeHtml(l.emp.bankCode||'')+' '+escapeHtml(maskAccount(l.emp.bankAccount))+'</bdi></td></tr>' : '')+
       '<tr><th>'+t('slip_days')+'</th><td>'+numSpan(l.workedDays)+' / '+numSpan(l.monthDays)+'</td></tr>'+
@@ -2608,7 +2624,7 @@ function renderEmployeesRows(){
   const tbody = document.getElementById('employeesTbody');
   if(!tbody) return;
   const q = searchKey(uiState.employeeSearch);
-  let list = state.employees.filter(function(e){ return !q || searchKey(e.name).includes(q) || searchKey(e.nameEn).includes(q); });
+  let list = state.employees.filter(function(e){ return !q || searchKey(e.name).includes(q) || searchKey(e.nameEn).includes(q) || searchKey(e.jobTitle).includes(q); });
   const derivedById = {};
   list.forEach(function(e){ derivedById[e.id] = computeEmployeeDerived(e); });
   const sk = uiState.empSort.key, dir = uiState.empSort.dir;
@@ -2655,7 +2671,7 @@ function renderEmployeesRows(){
     const docFlag = docAlertCount(emp) ? '<span class="doc-flag" title="'+t('doc_alert_short')+'">'+t('doc_alert_short')+'</span>' : '';
     return '<tr>'+
       '<td class="c-no">'+numSpan(emp.no)+'</td>'+
-      '<td class="c-name"><button type="button" class="name-link" data-action="open-employee" data-id="'+emp.id+'" aria-label="'+t('drw_view')+': '+escapeHtml(emp.name)+'">'+escapeHtml(emp.name)+'</button>'+docFlag+'</td>'+
+      '<td class="c-name"><button type="button" class="name-link" data-action="open-employee" data-id="'+emp.id+'" aria-label="'+t('drw_view')+': '+escapeHtml(emp.name)+'">'+escapeHtml(emp.name)+'</button>'+docFlag+(emp.jobTitle?'<div class="cell-note">'+escapeHtml(emp.jobTitle)+'</div>':'')+'</td>'+
       '<td class="c-hire">'+fmtDate(emp.hireDate)+'</td>'+
       '<td class="c-years">'+fmtNum(d.years,1)+' '+t('years_suffix')+'</td>'+
       '<td class="c-salary">'+fmtKWD(d.currentSalary)+'</td>'+
@@ -2678,6 +2694,8 @@ function employeeModalHtml(emp){
     '<div class="modal-body"><div class="form-grid">'+
       (editing ? '<div class="field full"><span class="sub-badge '+(emp.status==='terminated'?'inactive':'active')+'">'+(emp.status==='terminated'?t('status_terminated_emp'):t('status_active_emp'))+'</span></div>' : '')+
       '<div class="field full"><label>'+t('field_emp_name')+'</label><input type="text" name="name" required value="'+escapeHtml(emp.name)+'"></div>'+
+      (hasJobTitle ? '<div class="field full"><label for="empJobTitle">'+t('field_job_title')+'</label><input type="text" id="empJobTitle" name="jobTitle" maxlength="80" list="jobList" value="'+escapeHtml(emp.jobTitle||'')+'" placeholder="'+t('placeholder_job_title')+'">'+
+        '<datalist id="jobList">'+Array.from(new Set(state.employees.map(function(e){ return e.jobTitle; }).filter(Boolean))).sort().map(function(j){ return '<option value="'+escapeHtml(j)+'">'; }).join('')+'</datalist></div>' : '')+
       '<div class="field"><label>'+t('field_hire_date')+'</label><input type="date" name="hireDate" required value="'+(emp.hireDate||'')+'"></div>'+
       '<div class="field"><label>'+t('field_basic')+'</label><input type="text" inputmode="decimal" name="basic" required value="'+(emp.basic!=null?emp.basic:'')+'"></div>'+
       '<div class="field"><label>'+t('field_housing')+'</label><input type="text" inputmode="decimal" name="housing" value="'+(emp.housing!=null?emp.housing:'')+'"></div>'+
@@ -2707,7 +2725,7 @@ function employeeModalHtml(emp){
         '<div class="field"><label>'+t('doc_passport_expiry')+'</label><input type="date" name="passportExpiry" value="'+(emp.passportExpiry||'')+'"></div>'+
         '<div class="hint full">'+t('doc_hint')+'</div>'+
         '<div class="field full"><label>'+t('bank_name_en')+'</label><input type="text" name="nameEn" dir="ltr" autocapitalize="characters" value="'+escapeHtml(emp.nameEn||'')+'"><div class="hint">'+t('bank_name_en_hint')+'</div></div>'+
-        '<div class="field"><label>'+t('bank_bank')+'</label><select name="bankCode"><option value="">—</option>'+BANK_CODES.map(function(b){ return '<option value="'+b[0]+'" '+(emp.bankCode===b[0]?'selected':'')+'>'+b[0]+' — '+b[1]+'</option>'; }).join('')+'</select></div>'+
+        '<div class="field"><label>'+t('bank_bank')+'</label><select name="bankCode"><option value="">—</option>'+BANK_CODES.map(function(b){ return '<option value="'+b[0]+'" '+(emp.bankCode===b[0]?'selected':'')+'>'+b[0]+' — '+escapeHtml(bankName(b[0]))+'</option>'; }).join('')+'</select></div>'+
         '<div class="field"><label>'+t('bank_account')+'</label><input type="text" name="bankAccount" dir="ltr" inputmode="text" value="'+escapeHtml(emp.bankAccount||'')+'"><div class="hint">'+t('bank_account_hint')+'</div></div>'+
       '</div></details>' : '')+
       (hasOpeningLeaveCols ? '<details class="advanced full"'+(emp.leaveOpeningBalance!=null?' open':'')+'><summary>'+t('opening_title')+'</summary><div class="form-grid">'+
@@ -2742,6 +2760,7 @@ async function handleEmployeeSubmit(form){
     raiseApplied: fd.get('raiseApplied')==='on',
     raisePct: safeNum(fd.get('raisePct'))
   };
+  if(hasJobTitle) data.jobTitle = normText(fd.get('jobTitle')||'').slice(0,80);
   if(!data.name){ fieldError(form,'name',t('err_name_required')); return; }
   if(!data.hireDate){ fieldError(form,'hireDate',t('err_hiredate_required')); return; }
   for(const f of [['basic',{required:true,positive:true}],['housing'],['transport'],['other'],['raisePct']]){
@@ -2783,6 +2802,7 @@ async function handleEmployeeSubmit(form){
     eos_pay_basis: data.eosPayBasis,
     raise_applied: data.raiseApplied, raise_pct: data.raisePct, updated_at: new Date().toISOString()
   };
+  if(hasJobTitle) dbRow.job_title = data.jobTitle || null;
   if(hasOpeningLeaveCols){ dbRow.leave_opening_balance = data.leaveOpeningBalance; dbRow.leave_opening_date = data.leaveOpeningDate; }
   if(hasDocCols){ dbRow.name_en = data.nameEn || null; dbRow.bank_code = data.bankCode || null; dbRow.bank_account = data.bankAccount || null; }
   if(hasDocCols){ dbRow.civil_id = data.civilId || null; dbRow.nationality = data.nationality || null; dbRow.residency_expiry = data.residencyExpiry; dbRow.passport_expiry = data.passportExpiry; }
@@ -2923,7 +2943,7 @@ function renderDrawer(){
   h += '<header class="drw-head">'+
     '<button type="button" class="modal-close" data-action="close-drawer" aria-label="'+t('btn_close')+'">×</button>'+
     '<div class="drw-id"><h2 id="drwTitle" tabindex="-1">'+escapeHtml(emp.name)+'</h2>'+
-      '<div class="drw-meta">'+t('drw_no')+' '+numSpan(emp.no)+' · '+statusBadge+' · <span class="nowrap">'+t('drw_since')+' '+fmtDate(emp.hireDate)+'</span> · <span class="nowrap">'+fmtNum(live.years,1)+' '+t('years_suffix')+'</span></div></div>'+
+      '<div class="drw-meta">'+(emp.jobTitle ? '<b class="drw-job">'+escapeHtml(emp.jobTitle)+'</b> · ' : '')+t('drw_no')+' '+numSpan(emp.no)+' · '+statusBadge+' · <span class="nowrap">'+t('drw_since')+' '+fmtDate(emp.hireDate)+'</span> · <span class="nowrap">'+fmtNum(live.years,1)+' '+t('years_suffix')+'</span></div></div>'+
   '</header>';
   h += '<div class="drw-actions">'+
     btn('drw-add-leave', ICON.calendar, t('drw_act_leave'))+
@@ -3046,6 +3066,7 @@ function printSettlement(id){
   h += '<h2>'+t('prt_employee')+'</h2><table class="prt-kv">'+
     cell(t('col_name'), escapeHtml(emp.name))+
     cell(t('drw_no'), numSpan(emp.no))+
+    (emp.jobTitle ? cell(t('field_job_title'), escapeHtml(emp.jobTitle)) : '')+
     cell(t('col_hire_date'), fmtDate(emp.hireDate))+
     cell(t('prt_end_date'), isTerm ? fmtDate(emp.serviceEndDate) : fmtDate(todayStr())+' ('+t('label_estimated')+')')+
     cell(t('eos_preview_years'), numSpan(fmtNum(d.years,2))+' '+t('years_suffix'))+
@@ -3957,8 +3978,8 @@ function exportExcel(){
   const isAr = currentLang === 'ar';
 
   const empHeader = isAr
-    ? ['رقم الموظف','اسم الموظف','تاريخ التعيين','الحالة','تاريخ إنهاء الخدمة','مدة الخدمة (سنة)','نوع الإنهاء','الراتب الأساسي','بدل السكن','بدل النقل','بدلات أخرى','إجمالي الراتب','نهاية الخدمة — صاحب العمل','نهاية الخدمة — استقالة','نهاية الخدمة (نهائي)','أساس احتساب نهاية الخدمة','إجازات مستحقة (يوم)','إجازات مستخدمة (يوم)','رصيد الإجازات (يوم)','أساس بدل الإجازة','بدل الإجازات','السلف المتبقية','المدفوع من نهاية الخدمة','الصافي المستحق']
-    : ['No.','Employee Name','Hire Date','Status','Service End Date','Years of Service','Termination Type','Basic Salary','Housing','Transport','Other','Total Salary','EOS — Employer basis','EOS — Resignation basis','EOS (Final)','EOS Calculation Basis','Leave Accrued (days)','Leave Used (days)','Leave Balance (days)','Leave Pay Basis','Leave Pay','Remaining Loans','EOS Paid','Net Due'];
+    ? ['رقم الموظف','اسم الموظف','المسمى الوظيفي','تاريخ التعيين','الحالة','تاريخ إنهاء الخدمة','مدة الخدمة (سنة)','نوع الإنهاء','الراتب الأساسي','بدل السكن','بدل النقل','بدلات أخرى','إجمالي الراتب','نهاية الخدمة — صاحب العمل','نهاية الخدمة — استقالة','نهاية الخدمة (نهائي)','أساس احتساب نهاية الخدمة','إجازات مستحقة (يوم)','إجازات مستخدمة (يوم)','رصيد الإجازات (يوم)','أساس بدل الإجازة','بدل الإجازات','السلف المتبقية','المدفوع من نهاية الخدمة','الصافي المستحق']
+    : ['No.','Employee Name','Job Title','Hire Date','Status','Service End Date','Years of Service','Termination Type','Basic Salary','Housing','Transport','Other','Total Salary','EOS — Employer basis','EOS — Resignation basis','EOS (Final)','EOS Calculation Basis','Leave Accrued (days)','Leave Used (days)','Leave Balance (days)','Leave Pay Basis','Leave Pay','Remaining Loans','EOS Paid','Net Due'];
   const empRows = state.employees.map(function(e){
     const d = computeEmployeeDerived(e);
     const statusLabel = e.status==='terminated' ? t('status_terminated_emp') : t('status_active_emp');
@@ -3968,7 +3989,7 @@ function exportExcel(){
     const eosEmployerVal = d.isFinal ? '—' : round3(d.eosEmployer);
     const eosResignationVal = d.isFinal ? '—' : round3(d.eosResignation);
     const eosFinalVal = d.isFinal ? round3(d.eos) : '—';
-    return [e.no, e.name, e.hireDate, statusLabel, e.serviceEndDate||'—', round2(d.years), termLabel, e.basic, e.housing, e.transport, e.other, round3(d.currentSalary), eosEmployerVal, eosResignationVal, eosFinalVal, eosBasisLabel, round2(d.leaveAccrued), round2(d.leaveTaken), round2(d.leaveBalance), leaveBasisLabel, round3(d.leavePay), round3(d.loansRemaining), round3(d.eosPaid), round3(d.netDue)];
+    return [e.no, e.name, e.jobTitle||'', e.hireDate, statusLabel, e.serviceEndDate||'—', round2(d.years), termLabel, e.basic, e.housing, e.transport, e.other, round3(d.currentSalary), eosEmployerVal, eosResignationVal, eosFinalVal, eosBasisLabel, round2(d.leaveAccrued), round2(d.leaveTaken), round2(d.leaveBalance), leaveBasisLabel, round3(d.leavePay), round3(d.loansRemaining), round3(d.eosPaid), round3(d.netDue)];
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([empHeader].concat(empRows)), 'Employees');
 
