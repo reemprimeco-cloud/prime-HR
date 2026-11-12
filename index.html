@@ -360,6 +360,25 @@ html[dir="ltr"] .num{direction:ltr;}
   .mini-table li > span{grid-area:d;min-width:0;}
 }
 
+/* Payroll: approved state + payslips */
+.notice-bar.approved{background:#e9f7ef;border-color:#bfe5cd;}
+.notice-bar.approved b{color:var(--green);}
+.notice-bar .btn-outline{width:auto;flex-shrink:0;}
+.slip-btn{margin-inline-start:8px;vertical-align:middle;background:none;border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;color:var(--navy);cursor:pointer;}
+.slip-btn svg{width:16px;height:16px;}
+.slip-btn:hover{background:#f3f6fb;}
+@media print{
+  .slip{page-break-after:always;break-after:page;}
+  .slip:last-child{page-break-after:auto;break-after:auto;}
+  .slip-cols{display:flex;gap:18px;margin-top:14px;}
+  .slip-cols > div{flex:1;}
+  .slip-cols h2{margin-top:0;}
+  .prt-list tr.tot th,.prt-list tr.tot td{font-weight:800;background:#f2f4f8;}
+  .prt-list th{text-align:start;font-weight:600;}
+  .slip-net{display:flex;justify-content:space-between;align-items:center;border:2px solid #0d2b5e;padding:10px 14px;margin-top:16px;font-size:13pt;}
+  .slip-net b{font-size:15pt;color:#0d2b5e;}
+}
+
 /* Payroll */
 .pay-in{width:96px !important;min-height:38px;padding:7px 9px !important;font-size:.9rem !important;text-align:end;direction:ltr;}
 .pay-net b{color:var(--navy);font-weight:800;}
@@ -1055,6 +1074,19 @@ const TR = {
   btn_end_service: {ar:'إنهاء الخدمة', en:'End service'},
   btn_reactivate: {ar:'إعادة تفعيل', en:'Reactivate'},
   btn_close: {ar:'إغلاق', en:'Close'},
+  pay_apply_freeze: {ar:'بعد الاعتماد يُحفظ كشف هذا الشهر كما هو ولا يمكن تعديله أو اعتماده مرة أخرى من أي جهاز.', en:'After approval this month\u2019s sheet is saved as-is and cannot be edited or approved again from any device.'},
+  pay_already_approved: {ar:'هذا الشهر معتمد مسبقاً (ربما من جهاز آخر). عُرضت النسخة المعتمدة.', en:'This month was already approved (perhaps on another device). Showing the approved copy.'},
+  pay_approved_title: {ar:'كشف معتمد', en:'Approved payroll'},
+  pay_approved_text: {ar:'اعتُمد بتاريخ {d}. الأرقام مثبّتة كما كانت عند الاعتماد، وملف البنك وExcel والقسائم تُصدَّر منها.', en:'Approved on {d}. Figures are frozen as approved; the bank file, Excel and payslips are produced from them.'},
+  pay_print_slips: {ar:'طباعة كل القسائم', en:'Print all payslips'},
+  pay_slip: {ar:'قسيمة الراتب', en:'Payslip'},
+  slip_title: {ar:'قسيمة راتب', en:'Payslip'},
+  slip_days: {ar:'أيام العمل', en:'Days worked'},
+  slip_earnings: {ar:'المستحقات', en:'Earnings'},
+  slip_deductions: {ar:'الاستقطاعات', en:'Deductions'},
+  slip_total_earn: {ar:'إجمالي المستحقات', en:'Total earnings'},
+  slip_total_ded: {ar:'إجمالي الاستقطاعات', en:'Total deductions'},
+  slip_defer_note: {ar:'تم تأجيل {a} من راتب هذا الشهر، وهو دين على الشركة يُسدَّد للموظف لاحقاً.', en:'{a} of this month\u2019s salary was deferred; it is owed by the company and will be paid later.'},
   pay_defer: {ar:'مؤجل (دين)', en:'Deferred (owed)'},
   pay_repay: {ar:'سداد دين', en:'Debt repaid'},
   pay_defer_total: {ar:'مؤجل هذا الشهر', en:'Deferred this month'},
@@ -1727,8 +1759,9 @@ function leaveBalanceExcluding(empId, excludeRecordId){
 }
 
 /* ============ State (in-memory cache of the Supabase tables) ============ */
-function defaultState(){ return {employees:[], loans:[], eosPayments:[], leaveRecords:[], arrears:[], nextEmployeeNo:1}; }
+function defaultState(){ return {employees:[], loans:[], eosPayments:[], leaveRecords:[], arrears:[], payrollRuns:[], nextEmployeeNo:1}; }
 let hasArrears = false;
+let hasPayrollRuns = false;
 let state = defaultState();
 
 /* DB row <-> app object mappers (DB uses snake_case, app uses camelCase) */
@@ -1796,7 +1829,8 @@ async function loadDataFromSupabase(){
     hasArrears = !r.error;
     state.arrears = r.error ? [] : (r.data||[]).map(function(x){ return {id:x.id, employeeId:x.employee_id, month:x.month, kind:x.kind, amount:Number(x.amount), notes:x.notes||''}; });
   }, function(){ hasArrears = false; state.arrears = []; });
-  await holidaysLoad; await openingProbe; await docProbe; await arrearsLoad;
+  const runsLoad = loadPayrollRuns();
+  await holidaysLoad; await openingProbe; await docProbe; await arrearsLoad; await runsLoad;
   state.nextEmployeeNo = state.employees.reduce(function(m,e){ return Math.max(m, e.no); }, 0) + 1;
   setSyncStatus(true);
   return true;
@@ -2218,10 +2252,39 @@ function payrollLine(emp, m, draft){
   if(!emp.nameEn) missing.push(t('bank_name_en'));
   if(!emp.civilId) missing.push(t('doc_civil_id'));
   if(!emp.bankAccount || !emp.bankCode) missing.push(t('bank_account'));
-  return {emp:emp, workedDays:workedDays, monthDays:b.days, prorated: workedDays < b.days, gross:gross, bonus:bonus, unpaidDays:unpaidDays, unpaid:unpaid,
+  const f = workedDays / b.days;
+  const parts = {basic: round3(safeNum(emp.basic)*f), housing: round3(safeNum(emp.housing)*f), transport: round3(safeNum(emp.transport)*f), allowance: round3(safeNum(emp.other)*f)};
+  return {emp:emp, parts:parts, workedDays:workedDays, monthDays:b.days, prorated: workedDays < b.days, gross:gross, bonus:bonus, unpaidDays:unpaidDays, unpaid:unpaid,
     loan:loan, loanRemaining:loanRemaining, other:other, owedBefore:owedBefore, repay:repay, defer:defer, net:net, missing:missing};
 }
+/* ---- Approved months: frozen copy of the sheet in payroll_runs ---- */
+function loadPayrollRuns(){
+  return sb.from('payroll_runs').select('*').then(function(r){
+    hasPayrollRuns = !r.error;
+    state.payrollRuns = r.error ? [] : (r.data||[]);
+  }, function(){ hasPayrollRuns = false; state.payrollRuns = []; });
+}
+function getPayrollRun(m){ return (state.payrollRuns||[]).find(function(r){ return r.month===m; }) || null; }
+const SNAP_KEYS = ['workedDays','monthDays','gross','bonus','unpaidDays','unpaid','loan','other','repay','defer','net'];
+function snapshotLine(l){
+  const o = {empId:l.emp.id, no:l.emp.no, name:l.emp.name, nameEn:l.emp.nameEn||'', civilId:l.emp.civilId||'', bankCode:l.emp.bankCode||'', bankAccount:l.emp.bankAccount||'', parts:l.parts};
+  SNAP_KEYS.forEach(function(k){ o[k] = l[k]; });
+  return o;
+}
+function lineFromSnapshot(sn){
+  const live = state.employees.find(function(e){ return e.id===sn.empId; });
+  // Bank/identity details as they were when the month was approved (what the bank file used)
+  const emp = Object.assign({}, live || {id:sn.empId}, {no:sn.no, name:sn.name, nameEn:sn.nameEn, civilId:sn.civilId, bankCode:sn.bankCode, bankAccount:sn.bankAccount});
+  const l = {emp:emp, parts:sn.parts||{}, frozen:true, loanRemaining:0, owedBefore:0, prorated: sn.workedDays < sn.monthDays, missing:[]};
+  SNAP_KEYS.forEach(function(k){ l[k] = safeNum(sn[k]); });
+  if(!emp.nameEn) l.missing.push(t('bank_name_en'));
+  if(!emp.civilId) l.missing.push(t('doc_civil_id'));
+  if(!emp.bankAccount || !emp.bankCode) l.missing.push(t('bank_account'));
+  return l;
+}
 function payrollLines(m){
+  const run = getPayrollRun(m);
+  if(run) return (run.lines||[]).map(lineFromSnapshot);
   const draft = loadPayrollDraft(m);
   return state.employees.slice().sort(function(a,b){ return a.no-b.no; }).map(function(e){ return payrollLine(e, m, draft); }).filter(Boolean);
 }
@@ -2236,7 +2299,8 @@ function renderPayrollShell(){
   const lines = payrollLines(m);
   const tot = lines.reduce(function(a,l){ a.gross+=l.gross; a.bonus+=l.bonus; a.ded+=l.unpaid+l.loan+l.other; a.net+=l.net; a.defer+=l.defer; a.repay+=l.repay; return a; }, {defer:0,repay:0,gross:0,bonus:0,ded:0,net:0});
   const incomplete = lines.filter(function(l){ return l.missing.length; });
-  const applied = (function(){ try{ return localStorage.getItem(payrollDraftKey(m)+':loansApplied') || ((state.arrears||[]).some(function(a){ return a.month===m && a.notes==='payroll'; }) ? '1' : null); }catch(e){ return null; } })();
+  const run = getPayrollRun(m);
+  const applied = run ? run.approved_at : (function(){ try{ return localStorage.getItem(payrollDraftKey(m)+':loansApplied') || ((state.arrears||[]).some(function(a){ return a.month===m && a.notes==='payroll'; }) ? '1' : null); }catch(e){ return null; } })();
   let h = tabToolbar(t('pay_title'), lines.length,
     '<label class="sr-only" for="payMonth">'+t('pay_month')+'</label><input type="month" id="payMonth" class="filter-select" value="'+m+'">',
     '<button type="button" class="btn-primary" data-action="pay-export-nbk">'+t('pay_export_nbk')+'</button>');
@@ -2246,7 +2310,12 @@ function renderPayrollShell(){
     {label:t('pay_deductions'), value:fmtKWD(tot.ded), tone: tot.ded>0?'warn':null},
     {label:t('pay_net_total'), value:fmtKWD(tot.net), tone:'ok', note:t('pay_net_note')}
   ].concat(hasArrears && (tot.defer || tot.repay) ? [{label:t('pay_defer_total'), value:fmtKWD(tot.defer), tone:'warn', note:t('pay_repay_total')+' '+fmtKWD(tot.repay).replace(/<[^>]+>/g,'')}] : []));
-  if(incomplete.length){
+  if(run){
+    const when = new Date(run.approved_at);
+    h += '<div class="notice-bar approved" role="status"><div><b>'+t('pay_approved_title')+'</b><span>'+t('pay_approved_text').replace('{d}', fmtDate(todayStrOf(when)))+'</span></div>'+
+      '<button type="button" class="btn-outline" data-action="pay-slips-all">'+t('pay_print_slips')+'</button></div>';
+  }
+  if(incomplete.length && !run){
     h += '<div class="notice-bar" role="status"><div><b>'+t('pay_missing_title').replace('{n}', incomplete.length)+'</b><span>'+
       incomplete.slice(0,6).map(function(l){ return escapeHtml(l.emp.name)+' ('+l.missing.join('، ')+')'; }).join(' · ')+(incomplete.length>6?' …':'')+'</span>'+
       (hasDocCols ? '' : '<span class="pay-note">'+t('pay_missing_cols')+'</span>')+'</div></div>';
@@ -2256,25 +2325,67 @@ function renderPayrollShell(){
     '<th>'+t('pay_other')+'</th>'+(hasArrears?'<th>'+t('pay_defer')+'</th><th>'+t('pay_repay')+'</th>':'')+'<th>'+t('pay_net')+'</th></tr></thead><tbody>'+
     lines.map(function(l){
       const id = l.emp.id;
-      const num = function(field, val, max){ return '<input type="text" inputmode="decimal" class="pay-in" data-pay="'+field+'" data-id="'+id+'" value="'+(val?val:'')+'" placeholder="0" aria-label="'+t('pay_'+field)+' — '+escapeHtml(l.emp.name)+'"'+(max!=null?' data-max="'+max+'"':'')+'>'; };
+      const num = function(field, val, max){ if(l.frozen) return val ? fmtKWD(val) : '—'; return '<input type="text" inputmode="decimal" class="pay-in" data-pay="'+field+'" data-id="'+id+'" value="'+(val?val:'')+'" placeholder="0" aria-label="'+t('pay_'+field)+' — '+escapeHtml(l.emp.name)+'"'+(max!=null?' data-max="'+max+'"':'')+'>'; };
       return '<tr>'+
         '<td>'+empLink(id)+(l.prorated?'<div class="cell-note">'+t('pay_prorated').replace('{d}', l.workedDays).replace('{m}', l.monthDays)+'</div>':'')+(l.missing.length?'<div class="cell-note warn-note">'+t('pay_missing_short')+'</div>':'')+'</td>'+
         '<td>'+fmtKWD(l.gross)+'</td>'+
         '<td>'+num('bonus', l.bonus)+'</td>'+
         '<td>'+(l.unpaid ? '− '+fmtKWD(l.unpaid)+'<div class="cell-note">'+fmtNum(l.unpaidDays,1)+' '+t('day_suffix')+'</div>' : '—')+'</td>'+
-        '<td>'+(l.loanRemaining>0 ? num('loan', l.loan, l.loanRemaining)+'<div class="cell-note">'+t('pay_loan_left')+' '+fmtKWD(l.loanRemaining)+'</div>' : '—')+'</td>'+
+        '<td>'+((l.loanRemaining>0 || (l.frozen && l.loan)) ? num('loan', l.loan, l.loanRemaining)+'<div class="cell-note">'+t('pay_loan_left')+' '+fmtKWD(l.loanRemaining)+'</div>' : '—')+'</td>'+
         '<td>'+num('other', l.other)+'</td>'+
         (hasArrears ? '<td>'+num('defer', l.defer)+'</td>'+
-          '<td>'+(l.owedBefore>0 ? num('repay', l.repay, l.owedBefore)+'<div class="cell-note">'+t('arr_owed_short')+' '+fmtKWD(l.owedBefore)+'</div>' : '—')+'</td>' : '')+
-        '<td class="pay-net"><b>'+fmtKWD(l.net)+'</b></td></tr>';
+          '<td>'+((l.owedBefore>0 || (l.frozen && l.repay)) ? num('repay', l.repay, l.owedBefore)+'<div class="cell-note">'+t('arr_owed_short')+' '+fmtKWD(l.owedBefore)+'</div>' : '—')+'</td>' : '')+
+        '<td class="pay-net"><b>'+fmtKWD(l.net)+'</b>'+(run ? '<button type="button" class="slip-btn" data-action="pay-slip" data-id="'+id+'" title="'+t('pay_slip')+'" aria-label="'+t('pay_slip')+' — '+escapeHtml(l.emp.name)+'">'+ICON.print+'</button>' : '')+'</td></tr>';
     }).join('')+
     '</tbody></table></div></div>';
   h += '<div class="pay-actions">'+
     '<button type="button" class="btn-outline" data-action="pay-export-sheet">'+t('pay_export_sheet')+'</button>'+
-    (lines.some(function(l){ return l.loan>0 || l.defer>0 || l.repay>0; }) ? '<button type="button" class="btn-outline" data-action="pay-apply-loans"'+(applied?' disabled':'')+'>'+(applied?t('pay_month_applied'):t('pay_apply_month'))+'</button>' : '')+
+    (run ? '' : ((hasPayrollRuns || lines.some(function(l){ return l.loan>0 || l.defer>0 || l.repay>0; })) ? '<button type="button" class="btn-outline" data-action="pay-apply-loans"'+(applied?' disabled':'')+'>'+(applied?t('pay_month_applied'):t('pay_apply_month'))+'</button>' : ''))+
   '</div>';
   h += '<p class="drw-note">'+t('pay_footnote')+'</p>';
   root.innerHTML = h;
+}
+function todayStrOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function maskAccount(a){ a = String(a||''); return a.length > 4 ? '•••• '+a.slice(-4) : a; }
+/* Printable payslips (one A4 page each) for an approved month */
+function printPayslips(empId){
+  const m = uiState.payMonth;
+  const lines = payrollLines(m).filter(function(l){ return !empId || l.emp.id===empId; });
+  if(!lines.length) return;
+  const company = currentCompanyName || 'Prime HR';
+  const row = function(label, val, cls){ return '<tr'+(cls?' class="'+cls+'"':'')+'><th>'+label+'</th><td>'+fmtKWD(val)+'</td></tr>'; };
+  const html = lines.map(function(l){
+    const p = l.parts || {};
+    const earnTotal = round3(l.gross + l.bonus + l.repay);
+    const dedTotal = round3(l.unpaid + l.loan + l.other + l.defer);
+    let h = '<section class="prt slip">';
+    h += '<header class="prt-head"><div><div class="prt-company">'+escapeHtml(company)+'</div><h1>'+t('slip_title')+'</h1></div>'+
+         '<div class="prt-issued">'+t('pay_month')+'<br><b>'+escapeHtml(payrollMonthLabel(m))+'</b></div></header>';
+    h += '<table class="prt-kv">'+
+      '<tr><th>'+t('col_name')+'</th><td>'+escapeHtml(l.emp.name)+(l.emp.nameEn?' — <span dir="ltr">'+escapeHtml(l.emp.nameEn)+'</span>':'')+'</td></tr>'+
+      '<tr><th>'+t('drw_no')+'</th><td>'+numSpan(l.emp.no)+'</td></tr>'+
+      (l.emp.civilId ? '<tr><th>'+t('doc_civil_id')+'</th><td>'+numSpan(escapeHtml(l.emp.civilId))+'</td></tr>' : '')+
+      (l.emp.bankAccount ? '<tr><th>'+t('bank_account')+'</th><td><bdi dir="ltr">'+escapeHtml(l.emp.bankCode||'')+' '+escapeHtml(maskAccount(l.emp.bankAccount))+'</bdi></td></tr>' : '')+
+      '<tr><th>'+t('slip_days')+'</th><td>'+numSpan(l.workedDays)+' / '+numSpan(l.monthDays)+'</td></tr>'+
+    '</table>';
+    h += '<div class="slip-cols"><div><h2>'+t('slip_earnings')+'</h2><table class="prt-list">'+
+      row(t('drw_basic'), p.basic||0)+ (p.housing?row(t('drw_housing'), p.housing):'')+ (p.transport?row(t('drw_transport'), p.transport):'')+ (p.allowance?row(t('drw_other'), p.allowance):'')+
+      (l.bonus?row(t('pay_bonus'), l.bonus):'')+ (l.repay?row(t('pay_repay'), l.repay):'')+
+      row(t('slip_total_earn'), earnTotal, 'tot')+'</table></div>';
+    h += '<div><h2>'+t('slip_deductions')+'</h2><table class="prt-list">'+
+      (l.unpaid?row(t('pay_unpaid')+' ('+fmtNum(l.unpaidDays,1)+' '+t('day_suffix')+')', l.unpaid):'')+ (l.loan?row(t('pay_loan'), l.loan):'')+
+      (l.other?row(t('pay_other'), l.other):'')+ (l.defer?row(t('pay_defer'), l.defer):'')+
+      (dedTotal ? '' : '<tr><th>—</th><td>—</td></tr>')+
+      row(t('slip_total_ded'), dedTotal, 'tot')+'</table></div></div>';
+    h += '<div class="slip-net"><span>'+t('pay_net')+'</span><b>'+fmtKWD(l.net)+'</b></div>';
+    if(l.defer) h += '<p class="prt-legal">'+t('slip_defer_note').replace('{a}', fmtKWD(l.defer).replace(/<[^>]+>/g,''))+'</p>';
+    h += '<div class="prt-sign"><div>'+t('prt_sign_employee')+'</div><div>'+t('prt_sign_employer')+'</div></div>';
+    h += '<footer class="prt-foot">'+t('prt_footer')+'</footer></section>';
+    return h;
+  }).join('');
+  document.getElementById('printSheet').innerHTML = html;
+  document.title = t('slip_title')+' — '+payrollMonthLabel(m);
+  window.print();
 }
 function payrollMonthLabel(m){
   const d = new Date(+m.slice(0,4), +m.slice(5,7)-1, 1);
@@ -2330,13 +2441,26 @@ async function exportPayrollSheet(){
 }
 async function applyPayrollLoans(){
   const m = uiState.payMonth;
+  if(getPayrollRun(m)){ toast(t('pay_already_approved'),'error'); return; }
   const lines = payrollLines(m).filter(function(l){ return l.loan > 0 || l.defer > 0 || l.repay > 0; });
-  if(!lines.length) return;
+  if(!lines.length && !hasPayrollRuns) return;
   const sum = function(k){ return lines.reduce(function(a,l){ return a + l[k]; }, 0); };
   const plain = function(n){ return fmtKWD(n).replace(/<[^>]+>/g,''); };
   const msg = t('pay_apply_month_confirm').replace('{m}', payrollMonthLabel(m))
     .replace('{loans}', plain(sum('loan'))).replace('{defer}', plain(sum('defer'))).replace('{repay}', plain(sum('repay')));
-  if(!(await confirmAction({title:t('pay_apply_month'), message:msg, confirmLabel:t('pay_apply_month')}))) return;
+  if(!(await confirmAction({title:t('pay_apply_month'), message:msg + (hasPayrollRuns ? '\n'+t('pay_apply_freeze') : ''), confirmLabel:t('pay_apply_month')}))) return;
+  if(hasPayrollRuns){
+    const all = payrollLines(m);
+    const totals = all.reduce(function(a,l){ ['gross','bonus','unpaid','loan','other','defer','repay','net'].forEach(function(k){ a[k] = round3((a[k]||0) + l[k]); }); return a; }, {});
+    const { data, error } = await sb.from('payroll_runs').insert({month:m, totals:totals, lines:all.map(snapshotLine)}).select().single();
+    if(error){
+      // 23505 = unique violation: this month was already approved (possibly on another device)
+      if(error.code === '23505'){ await loadPayrollRuns(); renderPayrollShell(); toast(t('pay_already_approved'),'error'); }
+      else writeFailed(t('err_save_failed'), error);
+      return;
+    }
+    state.payrollRuns.push(data);
+  }
   let failed = 0;
   for(const l of lines){
     // Loan installments: spread over the employee's open loans, oldest first
@@ -2368,6 +2492,7 @@ async function applyPayrollLoans(){
   }
   setSyncStatus(failed===0);
   toast(failed ? t('pay_apply_partial') : t('pay_month_done'), failed?'error':'success');
+  renderPayrollShell();
 }
 
 function numSpan(v){ return '<span class="num">'+v+'</span>'; }
@@ -3840,6 +3965,8 @@ document.addEventListener('click', function(e){
   else if(action==='pay-export-nbk') exportNbkFile().catch(function(){ toast(t('err_excel_lib'),'error'); });
   else if(action==='pay-export-sheet') exportPayrollSheet().catch(function(){ toast(t('err_excel_lib'),'error'); });
   else if(action==='pay-apply-loans') applyPayrollLoans();
+  else if(action==='pay-slip') printPayslips(id);
+  else if(action==='pay-slips-all') printPayslips(null);
   else if(action==='emp-sort'){
     const k = btn.dataset.key;
     uiState.empSort = (uiState.empSort.key===k) ? {key:k, dir:-uiState.empSort.dir} : {key:k, dir:(k==='name'||k==='no'||k==='hire')?1:-1};
