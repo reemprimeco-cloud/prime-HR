@@ -320,6 +320,46 @@ html[dir="ltr"] .num{direction:ltr;}
   *{scroll-behavior:auto;}
 }
 
+/* Shared tab toolbar, segmented control, stat tiles, mini tables */
+.tab-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.tab-toolbar h2{margin:0;font-size:1.1rem;font-weight:800;color:var(--navy);margin-inline-end:auto;}
+.tt-count{color:var(--text-muted);font-weight:600;font-size:.85rem;}
+.tt-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.tt-controls .filter-select{width:auto;min-width:180px;max-width:260px;}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px;}
+.seg button{border:none;background:none;font:inherit;font-size:.8rem;font-weight:700;color:var(--text-muted);padding:8px 12px;min-height:36px;border-radius:8px;cursor:pointer;white-space:nowrap;}
+.seg button .num{opacity:.75;font-weight:600;margin-inline-start:2px;}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff;}
+.seg button:hover:not([aria-pressed="true"]){background:#eef1f7;color:var(--navy);}
+.stat-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+.stat > span{font-size:.76rem;font-weight:700;color:var(--text-muted);}
+.stat > b{font-size:1.25rem;font-weight:800;color:var(--navy);}
+.stat > b.tone-ok{color:var(--green);} .stat > b.tone-warn{color:var(--amber);} .stat > b.tone-bad{color:var(--red);}
+.stat small{font-size:.72rem;color:var(--text-muted);line-height:1.5;}
+.stat small.unit,.mini-table small.unit{font-size:.75em;font-weight:600;}
+.mini-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:18px;}
+.mini-table h3,.sub-h{margin:0 0 6px;font-size:.92rem;font-weight:800;color:var(--navy);}
+.sub-h{margin:4px 0 10px;}
+.mini-table ul{list-style:none;margin:0;padding:0;max-height:340px;overflow-y:auto;}
+.mini-table li{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--border);font-size:.84rem;}
+.mini-table li > span{color:var(--text-muted);flex:1;min-width:150px;}
+.mini-table li > b{font-weight:800;color:var(--navy);white-space:nowrap;}
+@media (max-width:640px){
+  .tab-toolbar h2{flex:1 1 100%;}
+  .tt-controls{flex:1 1 100%;}
+  .tt-controls .filter-select{flex:1;min-width:0;}
+  .seg{flex:1 1 100%;}
+  .seg button{flex:1;padding:8px 6px;}
+  .tab-toolbar > .btn-primary{flex:1 1 100%;}
+  .stat-tiles{grid-template-columns:1fr 1fr;}
+  .tt-controls .filter-select{max-width:none;}
+  .mini-table li{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n v" "d d";gap:4px 12px;}
+  .mini-table li > .name-link{grid-area:n;justify-self:start;}
+  .mini-table li > b{grid-area:v;}
+  .mini-table li > span{grid-area:d;min-width:0;}
+}
+
 /* Sortable headers */
 .th-sort{background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
 .th-sort::after{content:'↕';opacity:.35;font-size:.85em;}
@@ -1001,6 +1041,22 @@ const TR = {
   btn_end_service: {ar:'إنهاء الخدمة', en:'End service'},
   btn_reactivate: {ar:'إعادة تفعيل', en:'Reactivate'},
   btn_close: {ar:'إغلاق', en:'Close'},
+  eosl_final: {ar:'مكافآت نهائية (منتهو الخدمة)', en:'Final gratuities (leavers)'},
+  eosl_final_note: {ar:'حسب تاريخ ونوع الإنهاء الفعلي', en:'By actual end date and type'},
+  eosl_paid: {ar:'المدفوع', en:'Paid'},
+  eosl_outstanding: {ar:'المتبقي للسداد', en:'Still owed'},
+  eosl_active: {ar:'تقدير للموظفين النشطين', en:'Estimate for active staff'},
+  eosl_active_note: {ar:'على أساس الإنهاء من صاحب العمل حتى اليوم', en:'Employer-termination basis, as of today'},
+  eosl_owed_title: {ar:'مكافآت لم تُسدَّد بالكامل', en:'Gratuities not yet fully paid'},
+  eosl_of: {ar:'من', en:'of'},
+  eosl_paid_short: {ar:'مدفوع', en:'paid'},
+  eosl_payments: {ar:'سجل الدفعات', en:'Payment history'},
+  lb_title: {ar:'أرصدة الإجازات للموظفين النشطين', en:'Leave balances — active staff'},
+  lb_total_days: {ar:'إجمالي الأرصدة', en:'Total balance'},
+  lb_total_pay: {ar:'قيمة الأرصدة', en:'Balance value'},
+  lb_total_pay_note: {ar:'بدل الإجازات لو انتهت الخدمة اليوم', en:'Leave pay if service ended today'},
+  lb_first6: {ar:'أقل من 6 أشهر', en:'Under 6 months'},
+  lb_records: {ar:'سجل الإجازات', en:'Leave records'},
   doc_title: {ar:'الوثائق (البطاقة المدنية والإقامة)', en:'Documents (Civil ID & residency)'},
   doc_civil_id: {ar:'الرقم المدني', en:'Civil ID no.'},
   doc_nationality: {ar:'الجنسية', en:'Nationality'},
@@ -1987,6 +2043,25 @@ function openHolidaysModal(){
   if(uiState.activeTab==='dashboard') renderDashboard();
 }
 
+/* Shared tab toolbar: title (+count) · filters · primary action — one row on desktop, stacked on phones */
+function tabToolbar(title, count, controls, primary){
+  return '<div class="tab-toolbar"><h2>'+title+(count!=null?' <span class="tt-count">('+count+')</span>':'')+'</h2>'+
+    '<div class="tt-controls">'+(controls||'')+'</div>'+(primary||'')+'</div>';
+}
+/* Segmented control (single choice), state exposed with aria-pressed */
+function segControl(label, items, current, dataAttr){
+  return '<div class="seg" role="group" aria-label="'+label+'">'+items.map(function(it){
+    return '<button type="button" '+dataAttr+'="'+it.value+'" aria-pressed="'+(current===it.value)+'">'+it.label+(it.count!=null?' <span class="num">'+it.count+'</span>':'')+'</button>';
+  }).join('')+'</div>';
+}
+/* Summary tiles (label · value), shared by leave and EOS tabs */
+function statTiles(items){
+  return '<div class="stat-tiles">'+items.map(function(it){
+    return '<div class="stat"><span>'+it.label+'</span><b'+(it.tone?' class="tone-'+it.tone+'"':'')+'>'+it.value+'</b>'+(it.note?'<small>'+it.note+'</small>':'')+'</div>';
+  }).join('')+'</div>';
+}
+const fmtDays = function(n){ return fmtNum(n,1)+' <small class="unit">'+t('day_suffix')+'</small>'; };
+
 function numSpan(v){ return '<span class="num">'+v+'</span>'; }
 
 /* ============ Employees ============ */
@@ -2502,14 +2577,13 @@ function renderLoansShell(){
   const unpaidCount = state.loans.filter(function(l){ return (safeNum(l.original)-safeNum(l.deducted))>0.001; }).length;
   const paidCount = state.loans.length - unpaidCount;
   let html = '';
-  html += '<div class="section-toolbar"><h2>'+t('loans_title')+'</h2><div class="toolbar-actions">';
-  html += '<select class="filter-select" id="loanFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>';
-  html += '<button class="btn-primary" data-action="open-add-loan">'+t('btn_add_record')+'</button></div></div>';
-  html += '<div class="toolbar-actions" style="margin-bottom:14px;gap:6px">';
-  html += '<button class="btn-outline" aria-pressed="'+(uiState.loanFilterStatus==='unpaid')+'" style="'+(uiState.loanFilterStatus==='unpaid'?'background:var(--navy);color:#fff;':'')+'padding:8px 14px;width:auto" data-lf="unpaid">'+t('loans_filter_unpaid')+' ('+unpaidCount+')</button>';
-  html += '<button class="btn-outline" aria-pressed="'+(uiState.loanFilterStatus==='paid')+'" style="'+(uiState.loanFilterStatus==='paid'?'background:var(--green);color:#fff;border-color:var(--green);':'')+'padding:8px 14px;width:auto" data-lf="paid">'+t('loans_filter_paid')+' ('+paidCount+')</button>';
-  html += '<button class="btn-outline" aria-pressed="'+(uiState.loanFilterStatus==='all')+'" style="'+(uiState.loanFilterStatus==='all'?'background:var(--navy);color:#fff;':'')+'padding:8px 14px;width:auto" data-lf="all">'+t('admin_filter_all')+' ('+state.loans.length+')</button>';
-  html += '</div>';
+  html += tabToolbar(t('loans_title'), state.loans.length,
+    '<select class="filter-select" id="loanFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>'+
+    segControl(t('col_status'), [
+      {value:'unpaid', label:t('loans_filter_unpaid'), count:unpaidCount},
+      {value:'paid', label:t('loans_filter_paid'), count:paidCount},
+      {value:'all', label:t('admin_filter_all'), count:state.loans.length}], uiState.loanFilterStatus, 'data-lf'),
+    '<button class="btn-primary" data-action="open-add-loan">'+t('btn_add_record')+'</button>');
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
   html += '<thead><tr><th>'+t('col_date')+'</th><th>'+t('col_employee')+'</th><th>'+t('col_type')+'</th><th>'+t('col_description')+'</th><th>'+t('col_original')+'</th><th>'+t('col_deducted')+'</th><th>'+t('col_remaining')+'</th><th>'+t('col_actions')+'</th></tr></thead>';
   html += '<tbody id="loansTbody"></tbody></table></div></div>';
@@ -2693,14 +2767,46 @@ function renderEosShell(){
     return '<option value="'+e.id+'" '+(uiState.eosFilterEmp===e.id?'selected':'')+'>'+escapeHtml(e.name)+'</option>';
   }).join('');
   let html = '';
-  html += '<div class="section-toolbar"><h2>'+t('eos_title')+'</h2><div class="toolbar-actions">';
-  html += '<select class="filter-select" id="eosFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>';
-  html += '<button class="btn-primary" data-action="open-add-eos">'+t('btn_add_payment')+'</button></div></div>';
+  html += tabToolbar(t('eos_title'), null,
+    '<select class="filter-select" id="eosFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>',
+    '<button class="btn-primary" data-action="open-add-eos">'+t('btn_add_payment')+'</button>');
+  html += eosLiabilityHtml();
   html += '<div class="table-card stackable"><div class="table-scroll"><table>';
   html += '<thead><tr><th>'+t('col_date')+'</th><th>'+t('col_employee')+'</th><th>'+t('col_month')+'</th><th>'+t('col_paid_amount')+'</th><th>'+t('col_notes')+'</th><th>'+t('col_actions')+'</th></tr></thead>';
   html += '<tbody id="eosTbody"></tbody></table></div></div>';
   root.innerHTML = html;
   renderEosRows();
+}
+/* Liability vs paid: final gratuity for those who left (what is still owed), and the estimate for active staff */
+function eosLiabilityHtml(){
+  const scope = state.employees.filter(function(e){ return !uiState.eosFilterEmp || e.id===uiState.eosFilterEmp; });
+  let activeEst = 0, finalDue = 0, paid = 0;
+  const owed = [];
+  scope.forEach(function(e){
+    const d = computeEmployeeDerived(e);
+    paid += d.eosPaid;
+    if(e.status==='terminated'){
+      finalDue += d.eos;
+      const rem = round3(d.eos - d.eosPaid);
+      if(rem > 0.0005) owed.push({emp:e, eos:d.eos, paid:d.eosPaid, rem:rem});
+    } else activeEst += d.eos;
+  });
+  const outstanding = owed.reduce(function(a,o){ return a + o.rem; }, 0);
+  let h = statTiles([
+    {label:t('eosl_final'), value:fmtKWD(finalDue), note:t('eosl_final_note')},
+    {label:t('eosl_paid'), value:fmtKWD(paid)},
+    {label:t('eosl_outstanding'), value:fmtKWD(outstanding), tone: outstanding>0.0005?'warn':'ok'},
+    {label:t('eosl_active'), value:fmtKWD(activeEst), note:t('eosl_active_note')}
+  ]);
+  if(owed.length){
+    h += '<section class="mini-table" aria-labelledby="eoslOwed"><h3 id="eoslOwed">'+t('eosl_owed_title')+'</h3><ul>'+
+      owed.sort(function(a,b){ return b.rem - a.rem; }).map(function(o){
+        return '<li><button type="button" class="name-link" data-action="open-employee" data-id="'+o.emp.id+'">'+escapeHtml(o.emp.name)+'</button>'+
+          '<span>'+t('eosl_of')+' '+fmtKWD(o.eos)+' · '+t('eosl_paid_short')+' '+fmtKWD(o.paid)+'</span><b>'+fmtKWD(o.rem)+'</b></li>';
+      }).join('')+'</ul></section>';
+  }
+  h += '<h3 class="sub-h">'+t('eosl_payments')+'</h3>';
+  return h;
 }
 function renderEosRows(){
   const tbody = document.getElementById('eosTbody');
@@ -2807,25 +2913,27 @@ function renderLeaveShell(){
   }).join('');
 
   let html = '';
-  html += '<div class="section-toolbar"><h2>'+t('leave_title')+'</h2><div class="toolbar-actions">';
-  html += '<select class="filter-select" id="leaveFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>';
-  html += '<button class="btn-primary" data-action="open-add-leave">'+t('btn_add_leave')+'</button></div></div>';
+  html += tabToolbar(t('leave_title'), null,
+    '<select class="filter-select" id="leaveFilterEmp" aria-label="'+t('filter_all_employees')+'">'+opts+'</select>',
+    '<button class="btn-primary" data-action="open-add-leave">'+t('btn_add_leave')+'</button>');
+  if(!uiState.leaveFilterEmp) html += leaveBalancesHtml();
 
   // Per-employee summary when one is selected
   if(uiState.leaveFilterEmp){
     const emp = state.employees.find(function(e){ return e.id===uiState.leaveFilterEmp; });
     if(emp){
       const d = computeEmployeeDerived(emp);
-      html += '<div class="leave-summary">';
-      html += '<div><div style="font-size:.72rem;color:var(--text-muted);font-weight:700;margin-bottom:6px">'+t('leave_accrued')+'</div><div style="font-size:1.2rem;font-weight:800;color:var(--navy)">'+fmtNum(d.leaveAccrued,1)+' <span style="font-size:.78rem;font-weight:600">'+t('day_suffix')+'</span></div></div>';
-      html += '<div><div style="font-size:.72rem;color:var(--text-muted);font-weight:700;margin-bottom:6px">'+t('leave_used')+'</div><div style="font-size:1.2rem;font-weight:800;color:var(--navy)">'+fmtNum(d.leaveTaken,1)+' <span style="font-size:.78rem;font-weight:600">'+t('day_suffix')+'</span></div></div>';
-      html += '<div><div style="font-size:.72rem;color:var(--text-muted);font-weight:700;margin-bottom:6px">'+t('leave_remaining')+'</div><div style="font-size:1.2rem;font-weight:800;color:var(--green)">'+fmtNum(d.leaveBalance,1)+' <span style="font-size:.78rem;font-weight:600">'+t('day_suffix')+'</span></div></div>';
-      html += '<div><div style="font-size:.72rem;color:var(--text-muted);font-weight:700;margin-bottom:6px">'+t('leave_pay_due')+'</div><div style="font-size:1.2rem;font-weight:800;color:var(--navy)">'+fmtKWD(d.leavePay)+'</div></div>';
+      const tiles = [
+        {label:t('leave_accrued'), value:fmtDays(d.leaveAccrued)},
+        {label:t('leave_used'), value:fmtDays(d.leaveTaken)},
+        {label:t('leave_remaining'), value:fmtDays(d.leaveBalance), tone:'ok'},
+        {label:t('leave_pay_due'), value:fmtKWD(d.leavePay)}
+      ];
       if(d.leaveUnpaidDays>0){
-        html += '<div><div style="font-size:.72rem;color:var(--text-muted);font-weight:700;margin-bottom:6px">'+t('leave_total_unpaid')+'</div><div style="font-size:1.2rem;font-weight:800;color:var(--amber)">'+fmtNum(d.leaveUnpaidDays,1)+' <span style="font-size:.78rem;font-weight:600">'+t('day_suffix')+'</span></div></div>';
-        html += '<div><div style="font-size:.72rem;color:var(--text-muted);font-weight:700;margin-bottom:6px">'+t('leave_total_deduction')+'</div><div style="font-size:1.2rem;font-weight:800;color:var(--red)">'+fmtKWD(d.leaveUnpaidDeduction)+'</div></div>';
+        tiles.push({label:t('leave_total_unpaid'), value:fmtDays(d.leaveUnpaidDays), tone:'warn'});
+        tiles.push({label:t('drw_leave_deduction'), value:fmtKWD(d.leaveUnpaidDeduction), tone:'bad'});
       }
-      html += '</div>';
+      html += statTiles(tiles);
     }
   }
 
@@ -2842,6 +2950,25 @@ function renderLeaveShell(){
   renderLeaveRows();
 }
 
+/* All active employees' leave balances at a glance (largest liability first) */
+function leaveBalancesHtml(){
+  const rows = state.employees.filter(function(e){ return e.status!=='terminated'; }).map(function(e){ return {emp:e, d:computeEmployeeDerived(e)}; })
+    .sort(function(a,b){ return b.d.leaveBalance - a.d.leaveBalance; });
+  if(!rows.length) return '';
+  const totalDays = rows.reduce(function(a,r){ return a + r.d.leaveBalance; }, 0);
+  const totalPay = rows.reduce(function(a,r){ return a + r.d.leavePay; }, 0);
+  return statTiles([
+      {label:t('lb_total_days'), value:fmtDays(totalDays)},
+      {label:t('lb_total_pay'), value:fmtKWD(totalPay), note:t('lb_total_pay_note')}
+    ])+
+    '<section class="mini-table" aria-labelledby="lbTitle"><h3 id="lbTitle">'+t('lb_title')+'</h3><ul>'+
+    rows.map(function(r){
+      const first6 = inFirstSixMonths(r.emp, todayStr());
+      return '<li><button type="button" class="name-link" data-action="open-employee" data-id="'+r.emp.id+'">'+escapeHtml(r.emp.name)+'</button>'+
+        '<span>'+t('leave_used')+' '+fmtNum(r.d.leaveTaken,1)+' · '+fmtKWD(r.d.leavePay)+(first6?' · <span class="sub-badge pending">'+t('lb_first6')+'</span>':'')+'</span>'+
+        '<b>'+fmtDays(r.d.leaveBalance)+'</b></li>';
+    }).join('')+'</ul></section><h3 class="sub-h">'+t('lb_records')+'</h3>';
+}
 function renderLeaveRows(){
   const tbody = document.getElementById('leaveTbody');
   if(!tbody) return;
