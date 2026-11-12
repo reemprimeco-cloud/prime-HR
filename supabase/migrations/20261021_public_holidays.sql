@@ -1,5 +1,5 @@
 -- Prime HR: official holidays used to exclude days from annual leave (Labour Law Art. 70).
--- Run once in the Supabase SQL editor for the Prime HR project. Safe to re-run.
+-- Applied to the Prime-HR project on 2026-11-12 (after 20261112_security_hardening.sql). Safe to re-run.
 
 create table if not exists public.public_holidays (
   id uuid primary key default gen_random_uuid(),
@@ -18,19 +18,21 @@ create policy "Holidays are readable by signed-in users"
   to authenticated
   using (true);
 
--- Only the Prime HR admin account may add, change or remove holidays (same admin as ADMIN_EMAIL in index.html).
--- Separate write policies so they do not overlap the read policy.
+-- Only the Prime HR admin may add, change or remove holidays (is_prime_admin() from the security
+-- hardening migration). Separate write policies so they do not overlap the read policy.
 drop policy if exists "Holidays are managed by the admin" on public.public_holidays;
 drop policy if exists "Admin inserts holidays" on public.public_holidays;
 drop policy if exists "Admin updates holidays" on public.public_holidays;
 drop policy if exists "Admin deletes holidays" on public.public_holidays;
 create policy "Admin inserts holidays" on public.public_holidays for insert to authenticated
-  with check (((select auth.jwt()) ->> 'email') = 'reem@primekw.net');
+  with check ((select public.is_prime_admin()));
 create policy "Admin updates holidays" on public.public_holidays for update to authenticated
-  using (((select auth.jwt()) ->> 'email') = 'reem@primekw.net')
-  with check (((select auth.jwt()) ->> 'email') = 'reem@primekw.net');
+  using ((select public.is_prime_admin())) with check ((select public.is_prime_admin()));
 create policy "Admin deletes holidays" on public.public_holidays for delete to authenticated
-  using (((select auth.jwt()) ->> 'email') = 'reem@primekw.net');
+  using ((select public.is_prime_admin()));
+
+revoke all on public.public_holidays from anon;
+revoke truncate, references, trigger on public.public_holidays from authenticated;
 
 -- Seed: fixed holidays 2024-2028 and 2026 Islamic holidays (approx = pending official announcement)
 insert into public.public_holidays (date, name_ar, name_en, approx) values
