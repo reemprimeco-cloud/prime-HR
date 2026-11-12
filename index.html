@@ -1126,6 +1126,16 @@ const TR = {
   cert_body: {ar:'تشهد {c} بأن {n}{x}، يعمل لديها منذ {h} وما زال على رأس عمله حتى تاريخه، ويتقاضى راتباً شهرياً إجمالياً قدره {s}، تفصيله كالتالي:', en:'{c} certifies that {n}{x} has been employed with us since {h} and remains in service to date, receiving a total monthly salary of {s}, broken down as follows:'},
   cert_nat: {ar:'، {v} الجنسية', en:', a {v} national'},
   cert_cid: {ar:'، حامل البطاقة المدنية رقم {v}', en:', Civil ID {v}'},
+  cert_body_f: {ar:'تشهد {c} بأن {n}{x}، تعمل لديها منذ {h} وما زالت على رأس عملها حتى تاريخه، وتتقاضى راتباً شهرياً إجمالياً قدره {s}، تفصيله كالتالي:'},
+  cert_cid_f: {ar:'، حاملة البطاقة المدنية رقم {v}'},
+  cert_bank_f: {ar:'ويُحوَّل الراتب شهرياً إلى حساب الموظفة لدى {b}.'},
+  cert_close_f: {ar:'وقد أُعطيت هذه الشهادة بناءً على طلب الموظفة، دون أدنى مسؤولية على الشركة.'},
+  exp_body_f: {ar:'تشهد {c} بأن {n}{x}، قد عملت لديها خلال الفترة من {f} إلى {t}، أي ما مجموعه {y}، وقد انتهت خدمتها بتاريخ {t}.'},
+  exp_body_active_f: {ar:'تشهد {c} بأن {n}{x}، تعمل لديها منذ {f} وما زالت على رأس عملها حتى تاريخه، أي ما مجموعه {y} حتى الآن.'},
+  field_gender: {ar:'الجنس', en:'Gender'},
+  opt_male: {ar:'ذكر', en:'Male'},
+  opt_female: {ar:'أنثى', en:'Female'},
+  hint_gender: {ar:'لصياغة الشهادات بشكل صحيح (يعمل / تعمل).', en:'Used to word Arabic certificates correctly.'},
   cert_bank: {ar:'ويُحوَّل الراتب شهرياً إلى حساب الموظف لدى {b}.', en:'The salary is transferred monthly to the employee\u2019s account with {b}.'},
   cert_close: {ar:'وقد أُعطيت هذه الشهادة بناءً على طلب الموظف، دون أدنى مسؤولية على الشركة.', en:'This certificate was issued at the employee\u2019s request, without any liability on the company.'},
   lf_title: {ar:'نموذج إجازة سنوية', en:'Annual Leave Form'},
@@ -1454,6 +1464,8 @@ const TR = {
 
 let currentLang = localStorage.getItem('primeHR_lang') || 'ar';
 
+/* Gendered variant (key_f) when the employee is female and one exists for this language */
+function tg(key, emp){ const f = emp && emp.gender==='f' && TR[key+'_f']; return f && f[currentLang] ? f[currentLang] : t(key); }
 function t(key){
   const entry = TR[key];
   if(!entry) return key;
@@ -1842,6 +1854,7 @@ function defaultState(){ return {employees:[], loans:[], eosPayments:[], leaveRe
 let hasArrears = false;
 let hasPayrollRuns = false;
 let hasJobTitle = false;
+let hasGender = false;
 let state = defaultState();
 
 /* DB row <-> app object mappers (DB uses snake_case, app uses camelCase) */
@@ -1850,7 +1863,7 @@ function mapEmployeeFromDb(r){
     transport:Number(r.transport), other:Number(r.other),
     status: r.status || 'active',
     leaveOpeningBalance: r.leave_opening_balance!=null ? Number(r.leave_opening_balance) : null,
-    civilId: r.civil_id || '', nationality: r.nationality || '', jobTitle: r.job_title || '',
+    civilId: r.civil_id || '', nationality: r.nationality || '', jobTitle: r.job_title || '', gender: r.gender || 'm',
     nameEn: r.name_en || '', bankCode: r.bank_code || '', bankAccount: r.bank_account || '',
     residencyExpiry: r.residency_expiry || null, passportExpiry: r.passport_expiry || null,
     leaveOpeningDate: r.leave_opening_date || null,
@@ -1905,13 +1918,14 @@ async function loadDataFromSupabase(){
   state.eosPayments = eosRes.data.map(mapEosFromDb);
   state.leaveRecords = leaveRes.data.map(mapLeaveFromDb);
   const docProbe = sb.from('employees').select('civil_id').limit(1).then(function(r){ hasDocCols = !r.error; }, function(){ hasDocCols = false; });
+  const genderProbe = sb.from('employees').select('gender').limit(1).then(function(r){ hasGender = !r.error; }, function(){ hasGender = false; });
   const jobProbe = sb.from('employees').select('job_title').limit(1).then(function(r){ hasJobTitle = !r.error; }, function(){ hasJobTitle = false; });
   const arrearsLoad = sb.from('salary_arrears').select('*').then(function(r){
     hasArrears = !r.error;
     state.arrears = r.error ? [] : (r.data||[]).map(function(x){ return {id:x.id, employeeId:x.employee_id, month:x.month, kind:x.kind, amount:Number(x.amount), notes:x.notes||''}; });
   }, function(){ hasArrears = false; state.arrears = []; });
   const runsLoad = loadPayrollRuns();
-  await holidaysLoad; await openingProbe; await docProbe; await jobProbe; await arrearsLoad; await runsLoad;
+  await holidaysLoad; await openingProbe; await docProbe; await jobProbe; await genderProbe; await arrearsLoad; await runsLoad;
   state.nextEmployeeNo = state.employees.reduce(function(m,e){ return Math.max(m, e.no); }, 0) + 1;
   setSyncStatus(true);
   return true;
@@ -2524,13 +2538,13 @@ function printSalaryCertificate(id){
   h += '<header class="prt-head"><div><div class="prt-company">'+escapeHtml(company)+'</div><h1>'+t('cert_title')+'</h1></div>'+
        '<div class="prt-issued">'+t('prt_issued')+'<br><b>'+fmtDate(todayStr())+'</b></div></header>';
   h += '<p class="cert-to">'+t('cert_to')+'</p>';
-  h += '<p class="cert-body">'+t('cert_body').replace('{c}', '<b>'+escapeHtml(company)+'</b>').replace('{n}', '<b>'+escapeHtml(name)+'</b>').replace('{x}', extra)
+  h += '<p class="cert-body">'+tg('cert_body', emp).replace('{c}', '<b>'+escapeHtml(company)+'</b>').replace('{n}', '<b>'+escapeHtml(name)+'</b>').replace('{x}', extra)
         .replace('{h}', '<b>'+fmtDate(emp.hireDate)+'</b>').replace('{s}', '<b>'+escapeHtml(plain(total))+'</b>')+'</p>';
   h += '<table class="prt-list cert-table">'+row(t('drw_basic'), emp.basic)+
        (safeNum(emp.housing)?row(t('drw_housing'), emp.housing):'')+(safeNum(emp.transport)?row(t('drw_transport'), emp.transport):'')+(safeNum(emp.other)?row(t('drw_other'), emp.other):'')+
        '<tr class="tot"><th>'+t('drw_total')+'</th><td>'+fmtKWD(total)+'</td></tr></table>';
-  if(bank) h += '<p class="cert-body">'+t('cert_bank').replace('{b}', '<b>'+escapeHtml(bank)+'</b>')+'</p>';
-  h += '<p class="cert-body">'+t('cert_close')+'</p>';
+  if(bank) h += '<p class="cert-body">'+tg('cert_bank', emp).replace('{b}', '<b>'+escapeHtml(bank)+'</b>')+'</p>';
+  h += '<p class="cert-body">'+tg('cert_close', emp)+'</p>';
   h += '<div class="prt-sign"><div>'+t('prt_sign_employer')+'</div><div>'+t('prt_stamp')+'</div></div>';
   h += '<footer class="prt-foot">'+t('prt_footer')+'</footer></section>';
   document.getElementById('printSheet').innerHTML = h;
@@ -2540,7 +2554,7 @@ function printSalaryCertificate(id){
 function certIdentity(emp, en){
   let extra = '';
   if(emp.nationality && !(en && /[\u0600-\u06FF]/.test(emp.nationality))) extra += t('cert_nat').replace('{v}', escapeHtml(emp.nationality));
-  if(emp.civilId) extra += t('cert_cid').replace('{v}', '<bdi dir="ltr">'+escapeHtml(emp.civilId)+'</bdi>');
+  if(emp.civilId) extra += tg('cert_cid', emp).replace('{v}', '<bdi dir="ltr">'+escapeHtml(emp.civilId)+'</bdi>');
   if(emp.jobTitle && !(en && /[\u0600-\u06FF]/.test(emp.jobTitle))) extra += t('cert_job').replace('{v}', escapeHtml(emp.jobTitle));
   if(en && extra) extra += ',';
   return extra;
@@ -2567,13 +2581,13 @@ function printExperienceCertificate(id){
   const company = currentCompanyName || 'Prime HR';
   const name = en && emp.nameEn ? emp.nameEn : emp.name;
   const end = isTerm ? emp.serviceEndDate : todayStr();
-  const body = t(isTerm ? 'exp_body' : 'exp_body_active').replace('{c}', '<b>'+escapeHtml(company)+'</b>').replace('{n}', '<b>'+escapeHtml(name)+'</b>')
+  const body = tg(isTerm ? 'exp_body' : 'exp_body_active', emp).replace('{c}', '<b>'+escapeHtml(company)+'</b>').replace('{n}', '<b>'+escapeHtml(name)+'</b>')
     .replace('{x}', certIdentity(emp, en)).replace('{f}', '<b>'+fmtDate(emp.hireDate)+'</b>').split('{t}').join('<b>'+fmtDate(end)+'</b>')
     .replace('{y}', '<b>'+servicePeriod(emp.hireDate, end)+'</b>');
   let h = '<section class="prt cert">';
   h += '<header class="prt-head"><div><div class="prt-company">'+escapeHtml(company)+'</div><h1>'+t('exp_title')+'</h1></div>'+
        '<div class="prt-issued">'+t('prt_issued')+'<br><b>'+fmtDate(todayStr())+'</b></div></header>';
-  h += '<p class="cert-to">'+t('cert_to')+'</p><p class="cert-body">'+body+'</p><p class="cert-body">'+t('cert_close')+'</p>';
+  h += '<p class="cert-to">'+t('cert_to')+'</p><p class="cert-body">'+body+'</p><p class="cert-body">'+tg('cert_close', emp)+'</p>';
   h += '<div class="prt-sign"><div>'+t('prt_sign_employer')+'</div><div>'+t('prt_stamp')+'</div></div>';
   h += '<footer class="prt-foot">'+t('prt_footer')+'</footer></section>';
   document.getElementById('printSheet').innerHTML = h;
@@ -2861,6 +2875,9 @@ function employeeModalHtml(emp){
       '<div class="field full"><label>'+t('field_emp_name')+'</label><input type="text" name="name" required value="'+escapeHtml(emp.name)+'"></div>'+
       (hasJobTitle ? '<div class="field full"><label for="empJobTitle">'+t('field_job_title')+'</label><input type="text" id="empJobTitle" name="jobTitle" maxlength="80" list="jobList" value="'+escapeHtml(emp.jobTitle||'')+'" placeholder="'+t('placeholder_job_title')+'">'+
         '<datalist id="jobList">'+Array.from(new Set(state.employees.map(function(e){ return e.jobTitle; }).filter(Boolean))).sort().map(function(j){ return '<option value="'+escapeHtml(j)+'">'; }).join('')+'</datalist></div>' : '')+
+      (hasGender ? '<div class="field full"><label for="empGender">'+t('field_gender')+'</label><select id="empGender" name="gender">'+
+        '<option value="m"'+(emp.gender!=='f'?' selected':'')+'>'+t('opt_male')+'</option><option value="f"'+(emp.gender==='f'?' selected':'')+'>'+t('opt_female')+'</option></select>'+
+        '<div class="hint">'+t('hint_gender')+'</div></div>' : '')+
       '<div class="field"><label>'+t('field_hire_date')+'</label><input type="date" name="hireDate" required value="'+(emp.hireDate||'')+'"></div>'+
       '<div class="field"><label>'+t('field_basic')+'</label><input type="text" inputmode="decimal" name="basic" required value="'+(emp.basic!=null?emp.basic:'')+'"></div>'+
       '<div class="field"><label>'+t('field_housing')+'</label><input type="text" inputmode="decimal" name="housing" value="'+(emp.housing!=null?emp.housing:'')+'"></div>'+
@@ -2925,6 +2942,7 @@ async function handleEmployeeSubmit(form){
     raiseApplied: fd.get('raiseApplied')==='on',
     raisePct: safeNum(fd.get('raisePct'))
   };
+  if(hasGender) data.gender = fd.get('gender')==='f' ? 'f' : 'm';
   if(hasJobTitle) data.jobTitle = normText(fd.get('jobTitle')||'').slice(0,80);
   if(!data.name){ fieldError(form,'name',t('err_name_required')); return; }
   if(!data.hireDate){ fieldError(form,'hireDate',t('err_hiredate_required')); return; }
@@ -2967,6 +2985,7 @@ async function handleEmployeeSubmit(form){
     eos_pay_basis: data.eosPayBasis,
     raise_applied: data.raiseApplied, raise_pct: data.raisePct, updated_at: new Date().toISOString()
   };
+  if(hasGender) dbRow.gender = data.gender;
   if(hasJobTitle) dbRow.job_title = data.jobTitle || null;
   if(hasOpeningLeaveCols){ dbRow.leave_opening_balance = data.leaveOpeningBalance; dbRow.leave_opening_date = data.leaveOpeningDate; }
   if(hasDocCols){ dbRow.name_en = data.nameEn || null; dbRow.bank_code = data.bankCode || null; dbRow.bank_account = data.bankAccount || null; }
