@@ -360,6 +360,15 @@ html[dir="ltr"] .num{direction:ltr;}
   .mini-table li > span{grid-area:d;min-width:0;}
 }
 
+/* Payroll */
+.pay-in{width:96px !important;min-height:38px;padding:7px 9px !important;font-size:.9rem !important;text-align:end;direction:ltr;}
+.pay-net b{color:var(--navy);font-weight:800;}
+.warn-note{color:var(--amber) !important;font-weight:700;}
+.pay-actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px;}
+.pay-actions .btn-outline{width:auto;}
+.pay-note{font-size:.78rem;color:var(--text-muted);display:block;margin-top:4px;}
+@media (max-width:640px){ .pay-in{width:120px !important;} .pay-actions .btn-outline{flex:1 1 100%;} }
+
 /* Sortable headers */
 .th-sort{background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
 .th-sort::after{content:'↕';opacity:.35;font-size:.85em;}
@@ -740,6 +749,10 @@ body.drawer-open{overflow:hidden;}
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
     <span data-i18n="nav_eos">نهاية الخدمة</span>
   </button>
+  <button class="tab-btn" data-tab="payroll">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01M18 15v.01"/></svg>
+    <span data-i18n="nav_payroll">الرواتب</span>
+  </button>
   <button class="tab-btn" data-tab="leave">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     <span data-i18n="nav_leave">الإجازات</span>
@@ -752,6 +765,7 @@ body.drawer-open{overflow:hidden;}
   <section id="tab-employees" class="tab-panel" style="display:none"></section>
   <section id="tab-loans" class="tab-panel" style="display:none"></section>
   <section id="tab-eos" class="tab-panel" style="display:none"></section>
+  <section id="tab-payroll" class="tab-panel" style="display:none"></section>
   <section id="tab-leave" class="tab-panel" style="display:none"></section>
   <section id="tab-admin" class="tab-panel" style="display:none"></section>
 </div>
@@ -1041,6 +1055,47 @@ const TR = {
   btn_end_service: {ar:'إنهاء الخدمة', en:'End service'},
   btn_reactivate: {ar:'إعادة تفعيل', en:'Reactivate'},
   btn_close: {ar:'إغلاق', en:'Close'},
+  nav_payroll: {ar:'الرواتب', en:'Payroll'},
+  pay_title: {ar:'كشف الرواتب', en:'Payroll'},
+  pay_month: {ar:'الشهر', en:'Month'},
+  pay_add_first: {ar:'أضف الموظفين ليُحسب كشف الرواتب الشهري تلقائياً.', en:'Add employees to calculate the monthly payroll automatically.'},
+  pay_gross: {ar:'الراتب', en:'Salary'},
+  pay_additions: {ar:'الإضافات', en:'Additions'},
+  pay_deductions: {ar:'الخصومات', en:'Deductions'},
+  pay_net_total: {ar:'صافي الرواتب', en:'Net payroll'},
+  pay_net_note: {ar:'إجمالي ملف التحويل للبنك', en:'Total of the bank transfer file'},
+  pay_bonus: {ar:'إضافات / مكافأة', en:'Additions / bonus'},
+  pay_unpaid: {ar:'أيام بدون أجر', en:'Unpaid leave'},
+  pay_loan: {ar:'قسط السلفة', en:'Loan installment'},
+  pay_other: {ar:'خصومات أخرى', en:'Other deductions'},
+  pay_net: {ar:'الصافي', en:'Net pay'},
+  pay_loan_left: {ar:'المتبقي', en:'Left'},
+  pay_prorated: {ar:'{d} من {m} يوم', en:'{d} of {m} days'},
+  pay_missing_short: {ar:'بيانات البنك ناقصة', en:'Bank details missing'},
+  pay_missing_title: {ar:'{n} موظف بدون بيانات تحويل كاملة', en:'{n} employees without complete transfer details'},
+  pay_missing_cols: {ar:'لإضافة الاسم بالإنجليزي والرقم المدني والحساب، يجب تفعيل حقول الوثائق في قاعدة البيانات أولاً.', en:'To add English name, Civil ID and account, the documents fields must first be enabled in the database.'},
+  pay_export_nbk: {ar:'ملف التحويل NBK', en:'NBK salary file'},
+  pay_export_sheet: {ar:'تصدير كشف الرواتب (Excel)', en:'Export payroll (Excel)'},
+  pay_export_incomplete: {ar:'{n} موظف بدون بيانات تحويل كاملة ولن يُضافوا للملف: {names}. متابعة بالباقين؟', en:'{n} employees lack transfer details and will be left out: {names}. Continue with the rest?'},
+  pay_export_anyway: {ar:'متابعة', en:'Continue'},
+  pay_nothing_to_export: {ar:'لا يوجد موظف ببيانات تحويل كاملة', en:'No employee has complete transfer details'},
+  pay_exported: {ar:'تم إنشاء ملف التحويل ({n} موظف)', en:'Salary file created ({n} employees)'},
+  pay_apply_loans: {ar:'استقطاع أقساط السلف', en:'Deduct loan installments'},
+  pay_loans_applied: {ar:'تم استقطاع أقساط هذا الشهر', en:'Installments deducted for this month'},
+  pay_apply_confirm: {ar:'سيتم تسجيل أقساط السلف لـ {n} موظف بإجمالي {total} عن {m}، وتُخصم من أرصدة سلفهم. نفّذ هذا بعد تحويل الرواتب.', en:'Loan installments for {n} employees totalling {total} for {m} will be recorded against their loans. Do this after salaries are transferred.'},
+  pay_apply_done: {ar:'تم تسجيل أقساط السلف', en:'Loan installments recorded'},
+  pay_apply_partial: {ar:'تعذر تسجيل بعض الأقساط. حاول مرة أخرى.', en:'Some installments could not be recorded. Please try again.'},
+  pay_footnote: {ar:'الراتب يُحسب بنسبة أيام العمل لمن عُيّن أو انتهت خدمته خلال الشهر. الأيام بدون أجر تُخصم بأجر يومي = الراتب ÷ 30 للإجازات التي تبدأ في هذا الشهر. الإضافات والخصومات الأخرى (مثل التأمينات) تُحفظ على هذا الجهاز لكل شهر.', en:'Salary is prorated by days for joiners and leavers in the month. Unpaid days are deducted at a daily rate of salary ÷ 30 for leave starting this month. Additions and other deductions (e.g. social insurance) are kept on this device per month.'},
+  bank_name_en: {ar:'الاسم بالإنجليزي (كما في البنك)', en:'Name in English (as at the bank)'},
+  bank_name_en_hint: {ar:'يُستخدم في ملف تحويل الرواتب. أحرف إنجليزية كبيرة.', en:'Used in the salary transfer file. Capital Latin letters.'},
+  bank_bank: {ar:'البنك', en:'Bank'},
+  bank_account: {ar:'رقم الحساب / IBAN', en:'Account no. / IBAN'},
+  bank_account_hint: {ar:'حساب الوطني: الرقم فقط. البنوك الأخرى: IBAN يبدأ بـ KW.', en:'NBK account: number only. Other banks: IBAN starting with KW.'},
+  err_name_en: {ar:'اكتب الاسم بأحرف إنجليزية فقط', en:'Use Latin letters only'},
+  err_iban: {ar:'رقم IBAN غير صحيح (30 خانة يبدأ بـ KW)', en:'Invalid IBAN (30 characters starting with KW)'},
+  err_account: {ar:'رقم الحساب غير صحيح', en:'Invalid account number'},
+  err_account_iban_needed: {ar:'للبنوك غير الوطني أدخل IBAN', en:'Use the IBAN for banks other than NBK'},
+  err_bank_required: {ar:'اختر البنك', en:'Choose the bank'},
   eosl_final: {ar:'مكافآت نهائية (منتهو الخدمة)', en:'Final gratuities (leavers)'},
   eosl_final_note: {ar:'حسب تاريخ ونوع الإنهاء الفعلي', en:'By actual end date and type'},
   eosl_paid: {ar:'المدفوع', en:'Paid'},
@@ -1648,6 +1703,7 @@ function mapEmployeeFromDb(r){
     status: r.status || 'active',
     leaveOpeningBalance: r.leave_opening_balance!=null ? Number(r.leave_opening_balance) : null,
     civilId: r.civil_id || '', nationality: r.nationality || '',
+    nameEn: r.name_en || '', bankCode: r.bank_code || '', bankAccount: r.bank_account || '',
     residencyExpiry: r.residency_expiry || null, passportExpiry: r.passport_expiry || null,
     leaveOpeningDate: r.leave_opening_date || null,
     serviceEndDate: r.service_end_date || null,
@@ -1943,6 +1999,7 @@ function renderTabShell(tab){
   else if(tab==='loans') renderLoansShell();
   else if(tab==='eos') renderEosShell();
   else if(tab==='leave') renderLeaveShell();
+  else if(tab==='payroll') renderPayrollShell();
   else if(tab==='admin') renderAdminShell();
 }
 
@@ -2061,6 +2118,176 @@ function statTiles(items){
   }).join('')+'</div>';
 }
 const fmtDays = function(n){ return fmtNum(n,1)+' <small class="unit">'+t('day_suffix')+'</small>'; };
+
+/* ============ Payroll (monthly) + NBK salary file ============ */
+/* Bank codes exactly as in NBK's salary-file template ("Bank Codes" sheet) */
+const BANK_CODES = [['NBK','National Bank of Kuwait'],['BNP','BNP Paribas'],['BOB','Boubyan Bank'],['BUR','Burgan Bank of Kuwait'],['CBK','Central Bank of Kuwait'],['CIT','CitiBank Kuwait'],['COB','Commercial Bank of Kuwait'],['DOH','Doha Bank'],['GBK','Gulf Bank'],['HSB','HSBC'],['IBK','Industrial Bank of Kuwait'],['ABK','Al Ahli Bank of Kuwait'],['BBK','Bank of Bahrain and Kuwait'],['KFH','Kuwait Finance House'],['KIB','Kuwait International Bank'],['MSQ','Masqat Bank'],['MSR','Mashreq Bank'],['NBA','National Bank of Abu Dhabi'],['QNB','Qatar National Bank Kuwait'],['RAJ','Al-Rajhi Bank'],['SCB','Saving'],['WRB','Warba Bank'],['UNB','Union National Bank - Kuwait'],['ICK','Industrial and Commercial Bank of China - Kuwait']];
+/* IBAN bank identifiers we are confident about (others: choose the bank manually) */
+const IBAN_BANKS = {NBOK:'NBK', GULB:'GBK', COMB:'COB', KFHO:'KFH', BBYN:'BOB', BRGN:'BUR', ABKK:'ABK', KWIB:'KIB', WRBA:'WRB'};
+function bankFromIban(iban){ return IBAN_BANKS[String(iban).slice(4,8)] || ''; }
+function validKuwaitIban(iban){
+  if(!/^KW\d{2}[A-Z]{4}[A-Z0-9]{22}$/.test(iban)) return false;
+  const re = (iban.slice(4) + iban.slice(0,4)).replace(/[A-Z]/g, function(c){ return String(c.charCodeAt(0) - 55); });
+  let r = 0; for(let i=0;i<re.length;i++){ r = (r*10 + (+re[i])) % 97; }
+  return r === 1;
+}
+function monthStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function monthBounds(m){
+  const y = +m.slice(0,4), mo = +m.slice(5,7);
+  const last = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  return {from: m+'-01', to: m+'-'+String(last).padStart(2,'0'), days: last};
+}
+function payrollDraftKey(m){ return 'primeHR_payroll:'+(currentUserEmail||'local')+':'+m; }
+function loadPayrollDraft(m){ try{ return JSON.parse(localStorage.getItem(payrollDraftKey(m)) || '{}'); }catch(e){ return {}; } }
+function savePayrollDraft(m, d){ try{ localStorage.setItem(payrollDraftKey(m), JSON.stringify(d)); }catch(e){} }
+/* One employee's pay for a month. Prorated by calendar days for joiners/leavers; unpaid leave
+   starting in the month is deducted at the leave daily rate (monthly salary / 30). */
+function payrollLine(emp, m, draft){
+  const b = monthBounds(m);
+  if(!emp.hireDate || emp.hireDate > b.to) return null;
+  if(emp.status==='terminated' && emp.serviceEndDate && emp.serviceEndDate < b.from) return null;
+  const start = emp.hireDate > b.from ? emp.hireDate : b.from;
+  const end = (emp.status==='terminated' && emp.serviceEndDate && emp.serviceEndDate < b.to) ? emp.serviceEndDate : b.to;
+  const workedDays = calendarDaysBetween(start, end);
+  const gross = round3(calcCurrentSalary(emp) * workedDays / b.days);
+  const leaveBasis = emp.leavePayBasis === 'basic' ? safeNum(emp.basic) : calcCurrentSalary(emp);
+  const unpaidDays = state.leaveRecords.filter(function(r){ return r.employeeId===emp.id && r.dateFrom >= b.from && r.dateFrom <= b.to; })
+    .reduce(function(a,r){ return a + safeNum(r.unpaidDays||0); }, 0);
+  const unpaid = round3(leaveBasis / 30 * unpaidDays);
+  const loanRemaining = round3(getEmployeeLoansRemaining(emp.id));
+  const d = draft[emp.id] || {};
+  const bonus = safeNum(d.bonus), loan = Math.min(safeNum(d.loan), Math.max(0, loanRemaining)), other = safeNum(d.other);
+  const net = round3(gross + bonus - unpaid - loan - other);
+  const missing = [];
+  if(!emp.nameEn) missing.push(t('bank_name_en'));
+  if(!emp.civilId) missing.push(t('doc_civil_id'));
+  if(!emp.bankAccount || !emp.bankCode) missing.push(t('bank_account'));
+  return {emp:emp, workedDays:workedDays, monthDays:b.days, prorated: workedDays < b.days, gross:gross, bonus:bonus, unpaidDays:unpaidDays, unpaid:unpaid,
+    loan:loan, loanRemaining:loanRemaining, other:other, net:net, missing:missing};
+}
+function payrollLines(m){
+  const draft = loadPayrollDraft(m);
+  return state.employees.slice().sort(function(a,b){ return a.no-b.no; }).map(function(e){ return payrollLine(e, m, draft); }).filter(Boolean);
+}
+function renderPayrollShell(){
+  const root = document.getElementById('tab-payroll');
+  if(state.employees.length===0){
+    root.innerHTML = emptyState(SVG.loans, t('loans_add_first_title'), t('pay_add_first'), 'open-add-employee', t('btn_add_employee'));
+    return;
+  }
+  if(!uiState.payMonth) uiState.payMonth = monthStr(new Date());
+  const m = uiState.payMonth;
+  const lines = payrollLines(m);
+  const tot = lines.reduce(function(a,l){ a.gross+=l.gross; a.bonus+=l.bonus; a.ded+=l.unpaid+l.loan+l.other; a.net+=l.net; return a; }, {gross:0,bonus:0,ded:0,net:0});
+  const incomplete = lines.filter(function(l){ return l.missing.length; });
+  const applied = (function(){ try{ return localStorage.getItem(payrollDraftKey(m)+':loansApplied'); }catch(e){ return null; } })();
+  let h = tabToolbar(t('pay_title'), lines.length,
+    '<label class="sr-only" for="payMonth">'+t('pay_month')+'</label><input type="month" id="payMonth" class="filter-select" value="'+m+'">',
+    '<button type="button" class="btn-primary" data-action="pay-export-nbk">'+t('pay_export_nbk')+'</button>');
+  h += statTiles([
+    {label:t('pay_gross'), value:fmtKWD(tot.gross)},
+    {label:t('pay_additions'), value:fmtKWD(tot.bonus)},
+    {label:t('pay_deductions'), value:fmtKWD(tot.ded), tone: tot.ded>0?'warn':null},
+    {label:t('pay_net_total'), value:fmtKWD(tot.net), tone:'ok', note:t('pay_net_note')}
+  ]);
+  if(incomplete.length){
+    h += '<div class="notice-bar" role="status"><div><b>'+t('pay_missing_title').replace('{n}', incomplete.length)+'</b><span>'+
+      incomplete.slice(0,6).map(function(l){ return escapeHtml(l.emp.name)+' ('+l.missing.join('، ')+')'; }).join(' · ')+(incomplete.length>6?' …':'')+'</span>'+
+      (hasDocCols ? '' : '<span class="pay-note">'+t('pay_missing_cols')+'</span>')+'</div></div>';
+  }
+  h += '<div class="table-card stackable pay-table"><div class="table-scroll"><table><thead><tr>'+
+    '<th>'+t('col_employee')+'</th><th>'+t('pay_gross')+'</th><th>'+t('pay_bonus')+'</th><th>'+t('pay_unpaid')+'</th><th>'+t('pay_loan')+'</th><th>'+t('pay_other')+'</th><th>'+t('pay_net')+'</th></tr></thead><tbody>'+
+    lines.map(function(l){
+      const id = l.emp.id;
+      const num = function(field, val, max){ return '<input type="text" inputmode="decimal" class="pay-in" data-pay="'+field+'" data-id="'+id+'" value="'+(val?val:'')+'" placeholder="0" aria-label="'+t('pay_'+field)+' — '+escapeHtml(l.emp.name)+'"'+(max!=null?' data-max="'+max+'"':'')+'>'; };
+      return '<tr>'+
+        '<td>'+empLink(id)+(l.prorated?'<div class="cell-note">'+t('pay_prorated').replace('{d}', l.workedDays).replace('{m}', l.monthDays)+'</div>':'')+(l.missing.length?'<div class="cell-note warn-note">'+t('pay_missing_short')+'</div>':'')+'</td>'+
+        '<td>'+fmtKWD(l.gross)+'</td>'+
+        '<td>'+num('bonus', l.bonus)+'</td>'+
+        '<td>'+(l.unpaid ? '− '+fmtKWD(l.unpaid)+'<div class="cell-note">'+fmtNum(l.unpaidDays,1)+' '+t('day_suffix')+'</div>' : '—')+'</td>'+
+        '<td>'+(l.loanRemaining>0 ? num('loan', l.loan, l.loanRemaining)+'<div class="cell-note">'+t('pay_loan_left')+' '+fmtKWD(l.loanRemaining)+'</div>' : '—')+'</td>'+
+        '<td>'+num('other', l.other)+'</td>'+
+        '<td class="pay-net"><b>'+fmtKWD(l.net)+'</b></td></tr>';
+    }).join('')+
+    '</tbody></table></div></div>';
+  h += '<div class="pay-actions">'+
+    '<button type="button" class="btn-outline" data-action="pay-export-sheet">'+t('pay_export_sheet')+'</button>'+
+    (lines.some(function(l){ return l.loan>0; }) ? '<button type="button" class="btn-outline" data-action="pay-apply-loans"'+(applied?' disabled':'')+'>'+(applied?t('pay_loans_applied'):t('pay_apply_loans'))+'</button>' : '')+
+  '</div>';
+  h += '<p class="drw-note">'+t('pay_footnote')+'</p>';
+  root.innerHTML = h;
+}
+function payrollMonthLabel(m){
+  const d = new Date(+m.slice(0,4), +m.slice(5,7)-1, 1);
+  return d.toLocaleDateString(currentLang==='en'?'en-GB':'ar-KW', {month:'long', year:'numeric'});
+}
+async function exportNbkFile(){
+  const m = uiState.payMonth; const lines = payrollLines(m).filter(function(l){ return l.net > 0; });
+  const bad = lines.filter(function(l){ return l.missing.length; });
+  if(bad.length){
+    const ok = await confirmAction({title:t('pay_export_nbk'), message:t('pay_export_incomplete').replace('{n}', bad.length).replace('{names}', bad.slice(0,5).map(function(l){ return l.emp.name; }).join('، ')), confirmLabel:t('pay_export_anyway')});
+    if(!ok) return;
+  }
+  const good = lines.filter(function(l){ return !l.missing.length; });
+  if(!good.length){ toast(t('pay_nothing_to_export'),'error'); return; }
+  await loadXlsx();
+  const header = ["Payment Serial Number","Beneficiary Name","Beneficiary Civil Id","Account # for NBK A/C & IBAN for other Bank","Beneficiary Bank (Refer next sheet 'Bank Codes' for list of Banks)","Payment Currency (only KWD)","Payment Amount"];
+  const rows = [header].concat(good.map(function(l, i){
+    const acct = /^\d+$/.test(l.emp.bankAccount) ? Number(l.emp.bankAccount) : l.emp.bankAccount;
+    return [i+1, l.emp.nameEn, Number(l.emp.civilId), acct, l.emp.bankCode, 'KWD', round3(l.net)];
+  }));
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  for(let r=2; r<=rows.length; r++){ const c = ws['C'+r]; if(c) c.z = '0'; const d = ws['D'+r]; if(d && d.t==='n') d.z = '0'; }
+  ws['!cols'] = [{wch:14},{wch:44},{wch:20},{wch:35},{wch:25},{wch:17},{wch:16}];
+  const codes = XLSX.utils.aoa_to_sheet([["Bank Code","Bank Name"]].concat(BANK_CODES.map(function(b){ return [b[0], b[0]+'-'+b[1]]; })));
+  codes['!cols'] = [{wch:36},{wch:52}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Salary Details');
+  XLSX.utils.book_append_sheet(wb, codes, 'Bank Codes');
+  XLSX.writeFile(wb, 'Salary_File_'+m+'.xls', {bookType:'biff8'});
+  toast(t('pay_exported').replace('{n}', good.length));
+}
+async function exportPayrollSheet(){
+  const m = uiState.payMonth; const lines = payrollLines(m);
+  await loadXlsx();
+  const ar = currentLang !== 'en';
+  const head = ar ? ['الرقم','الموظف','أيام العمل','الراتب','إضافات','خصم أيام بدون أجر','قسط السلفة','خصومات أخرى','الصافي','البنك','الحساب / IBAN']
+                  : ['No.','Employee','Days worked','Salary','Additions','Unpaid leave','Loan installment','Other deductions','Net pay','Bank','Account / IBAN'];
+  const rows = [[(ar?'كشف رواتب ':'Payroll ')+payrollMonthLabel(m)+(currentCompanyName?' — '+currentCompanyName:'')], [], head].concat(lines.map(function(l){
+    return [l.emp.no, l.emp.name, l.workedDays+'/'+l.monthDays, l.gross, l.bonus, l.unpaid, l.loan, l.other, l.net, l.emp.bankCode||'', l.emp.bankAccount||''];
+  }));
+  const sum = function(k){ return round3(lines.reduce(function(a,l){ return a + l[k]; }, 0)); };
+  rows.push(['', ar?'الإجمالي':'Total', '', sum('gross'), sum('bonus'), sum('unpaid'), sum('loan'), sum('other'), sum('net'), '', '']);
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:6},{wch:30},{wch:11},{wch:12},{wch:11},{wch:16},{wch:14},{wch:15},{wch:12},{wch:8},{wch:32}];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, ar?'كشف الرواتب':'Payroll');
+  if(ar) wb.Workbook = {Views:[{RTL:true}]};
+  XLSX.writeFile(wb, 'Payroll_'+m+'.xlsx');
+}
+async function applyPayrollLoans(){
+  const m = uiState.payMonth;
+  const lines = payrollLines(m).filter(function(l){ return l.loan > 0; });
+  if(!lines.length) return;
+  const total = lines.reduce(function(a,l){ return a + l.loan; }, 0);
+  if(!(await confirmAction({title:t('pay_apply_loans'), message:t('pay_apply_confirm').replace('{n}', lines.length).replace('{total}', fmtKWD(total).replace(/<[^>]+>/g,'')).replace('{m}', payrollMonthLabel(m)), confirmLabel:t('pay_apply_loans')}))) return;
+  let failed = 0;
+  for(const l of lines){
+    // Spread the installment over the employee's open loans, oldest first
+    let left = l.loan;
+    const open = state.loans.filter(function(x){ return x.employeeId===l.emp.id && safeNum(x.original)-safeNum(x.deducted) > 0.0005; }).sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+    for(const loan of open){
+      if(left <= 0.0005) break;
+      const take = round3(Math.min(left, safeNum(loan.original)-safeNum(loan.deducted)));
+      const nd = round3(safeNum(loan.deducted) + take);
+      const { error } = await sb.from('loans').update({deducted: nd}).eq('id', loan.id);
+      if(error){ failed++; continue; }
+      loan.deducted = nd; left = round3(left - take);
+    }
+  }
+  if(!failed){ try{ localStorage.setItem(payrollDraftKey(m)+':loansApplied', new Date().toISOString()); }catch(e){} }
+  setSyncStatus(failed===0);
+  toast(failed ? t('pay_apply_partial') : t('pay_apply_done'), failed?'error':'success');
+}
 
 function numSpan(v){ return '<span class="num">'+v+'</span>'; }
 
@@ -2189,6 +2416,9 @@ function employeeModalHtml(emp){
         '<div class="field"><label>'+t('doc_residency_expiry')+'</label><input type="date" name="residencyExpiry" value="'+(emp.residencyExpiry||'')+'"></div>'+
         '<div class="field"><label>'+t('doc_passport_expiry')+'</label><input type="date" name="passportExpiry" value="'+(emp.passportExpiry||'')+'"></div>'+
         '<div class="hint full">'+t('doc_hint')+'</div>'+
+        '<div class="field full"><label>'+t('bank_name_en')+'</label><input type="text" name="nameEn" dir="ltr" autocapitalize="characters" value="'+escapeHtml(emp.nameEn||'')+'"><div class="hint">'+t('bank_name_en_hint')+'</div></div>'+
+        '<div class="field"><label>'+t('bank_bank')+'</label><select name="bankCode"><option value="">—</option>'+BANK_CODES.map(function(b){ return '<option value="'+b[0]+'" '+(emp.bankCode===b[0]?'selected':'')+'>'+b[0]+' — '+b[1]+'</option>'; }).join('')+'</select></div>'+
+        '<div class="field"><label>'+t('bank_account')+'</label><input type="text" name="bankAccount" dir="ltr" inputmode="text" value="'+escapeHtml(emp.bankAccount||'')+'"><div class="hint">'+t('bank_account_hint')+'</div></div>'+
       '</div></details>' : '')+
       (hasOpeningLeaveCols ? '<details class="advanced full"'+(emp.leaveOpeningBalance!=null?' open':'')+'><summary>'+t('opening_title')+'</summary><div class="form-grid">'+
         '<div class="field"><label>'+t('opening_balance')+'</label><input type="text" inputmode="decimal" name="leaveOpeningBalance" value="'+(emp.leaveOpeningBalance!=null?emp.leaveOpeningBalance:'')+'"></div>'+
@@ -2232,6 +2462,19 @@ async function handleEmployeeSubmit(form){
     if(cid && !/^\d{12}$/.test(cid)){ fieldError(form,'civilId',t('err_civil_id')); return; }
     data.civilId = cid; data.nationality = (form.nationality.value||'').trim();
     data.residencyExpiry = form.residencyExpiry.value || null; data.passportExpiry = form.passportExpiry.value || null;
+    data.nameEn = (form.nameEn.value||'').trim().toUpperCase();
+    if(data.nameEn && !/^[A-Z][A-Z .'\-]*$/.test(data.nameEn)){ fieldError(form,'nameEn',t('err_name_en')); return; }
+    let acct = normalizeDigits(form.bankAccount.value||'').replace(/\s/g,'').toUpperCase();
+    let bank = form.bankCode.value || '';
+    if(acct){
+      if(/^KW/.test(acct)){
+        if(!validKuwaitIban(acct)){ fieldError(form,'bankAccount',t('err_iban')); return; }
+        const guessed = bankFromIban(acct); if(!bank && guessed) bank = guessed;
+      } else if(!/^\d{6,14}$/.test(acct)){ fieldError(form,'bankAccount',t('err_account')); return; }
+      else if(bank && bank!=='NBK'){ fieldError(form,'bankAccount',t('err_account_iban_needed')); return; }
+      if(!bank){ fieldError(form,'bankCode',t('err_bank_required')); return; }
+    }
+    data.bankAccount = acct; data.bankCode = bank;
   }
   if(hasOpeningLeaveCols){
     const ob = numField(form, 'leaveOpeningBalance');
@@ -2251,6 +2494,7 @@ async function handleEmployeeSubmit(form){
     raise_applied: data.raiseApplied, raise_pct: data.raisePct, updated_at: new Date().toISOString()
   };
   if(hasOpeningLeaveCols){ dbRow.leave_opening_balance = data.leaveOpeningBalance; dbRow.leave_opening_date = data.leaveOpeningDate; }
+  if(hasDocCols){ dbRow.name_en = data.nameEn || null; dbRow.bank_code = data.bankCode || null; dbRow.bank_account = data.bankAccount || null; }
   if(hasDocCols){ dbRow.civil_id = data.civilId || null; dbRow.nationality = data.nationality || null; dbRow.residency_expiry = data.residencyExpiry; dbRow.passport_expiry = data.passportExpiry; }
   if(id){
     const { error } = await sb.from('employees').update(dbRow).eq('id', id);
@@ -3505,6 +3749,9 @@ document.addEventListener('click', function(e){
   else if(action==='drw-add-eos') drawerQuickAdd('eos', id);
   else if(action==='drw-print') printSettlement(id);
   else if(action==='recalc-leave') runLeaveRecalc();
+  else if(action==='pay-export-nbk') exportNbkFile().catch(function(){ toast(t('err_excel_lib'),'error'); });
+  else if(action==='pay-export-sheet') exportPayrollSheet().catch(function(){ toast(t('err_excel_lib'),'error'); });
+  else if(action==='pay-apply-loans') applyPayrollLoans();
   else if(action==='emp-sort'){
     const k = btn.dataset.key;
     uiState.empSort = (uiState.empSort.key===k) ? {key:k, dir:-uiState.empSort.dir} : {key:k, dir:(k==='name'||k==='no'||k==='hire')?1:-1};
@@ -3591,6 +3838,15 @@ document.addEventListener('input', function(e){
   if(e.target.id==='employeeSearch'){ uiState.employeeSearch = e.target.value; renderEmployeesRows(); }
 });
 document.addEventListener('change', function(e){
+  if(e.target.id==='payMonth' && e.target.value){ uiState.payMonth = e.target.value; renderPayrollShell(); return; }
+  if(e.target.classList && e.target.classList.contains('pay-in')){
+    const m = uiState.payMonth, d = loadPayrollDraft(m), id = e.target.dataset.id, f = e.target.dataset.pay;
+    let v = parseAmount(e.target.value); if(isNaN(v) || v < 0) v = 0;
+    if(e.target.dataset.max){ v = Math.min(v, safeNum(e.target.dataset.max)); }
+    d[id] = d[id] || {}; d[id][f] = round3(v); savePayrollDraft(m, d);
+    renderPayrollShell();
+    return;
+  }
   if(e.target.id==='loanFilterEmp'){ uiState.loanFilterEmp = e.target.value; renderLoansRows(); }
   else if(e.target.id==='eosFilterEmp'){ uiState.eosFilterEmp = e.target.value; renderEosRows(); }
   else if(e.target.id==='leaveFilterEmp'){
