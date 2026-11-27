@@ -374,6 +374,19 @@ html[dir="ltr"] .num{direction:ltr;}
 .pay-note-in{display:block;width:100%;min-width:120px;min-height:34px;height:34px;margin-top:6px;padding:4px 8px;font:inherit;font-size:.76rem;border:1px solid var(--border);border-radius:8px;background:#fff;}
 .pay-note-in.needs{border-color:var(--amber);background:#fffaf2;}
 .drw-why{display:block;color:var(--text-muted);font-size:.74rem;margin-top:2px;}
+.guide-body{padding-top:6px;}
+.g-sec{padding:14px 0;border-top:1px solid var(--border);}
+.g-sec:first-child{border-top:0;}
+.g-sec h3{margin:0 0 8px;font-size:.95rem;color:var(--navy);}
+.g-sec ol,.g-sec ul{margin:0 0 10px;padding-inline-start:20px;line-height:1.85;font-size:.86rem;}
+.g-sec p{margin:0 0 10px;font-size:.86rem;line-height:1.85;}
+.g-sec li{margin-bottom:4px;}
+.g-map{list-style:none;padding:0 !important;}
+.g-map li{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px dashed var(--border);margin:0;}
+.g-map li:first-child{border-top:0;}
+.g-map li b{color:var(--text);}
+.g-map li span{color:var(--text-muted);}
+.g-sec .btn-outline{width:auto;display:inline-flex;align-items:center;min-height:38px;padding:6px 16px;text-decoration:none;}
 .pay-guide{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:.86rem;}
 .pay-guide summary{cursor:pointer;font-weight:700;color:var(--navy);min-height:28px;display:flex;align-items:center;}
 .pay-guide ol{margin:10px 0 2px;padding-inline-start:20px;line-height:1.9;color:var(--text);}
@@ -784,6 +797,10 @@ body.drawer-open{overflow:hidden;}
       <button type="button" class="lang-btn" data-lang="en" lang="en">EN</button>
     </div>
     <div class="save-indicator"><span class="save-dot" id="saveDot"></span><span id="saveStatus">—</span></div>
+    <button class="btn-ghost-light" data-action="open-guide" aria-label="دليل الاستخدام" data-i18n-aria="guide_title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5"/><line x1="12" y1="17.5" x2="12" y2="17.5"/></svg>
+      <span data-i18n="guide_short">الدليل</span>
+    </button>
     <button class="btn-ghost-light" data-action="open-data-manage" aria-label="الإعدادات" data-i18n-aria="nav_settings">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span data-i18n="nav_settings">الإعدادات</span>
@@ -909,6 +926,9 @@ const TR = {
   // Header / nav
   header_subtitle: {ar:'Prime HR', en:'Prime HR'},
   nav_settings: {ar:'الإعدادات', en:'Settings'},
+  guide_title: {ar:'دليل الاستخدام', en:'User guide'},
+  guide_short: {ar:'الدليل', en:'Guide'},
+  guide_html: {ar:"<section class=\"g-sec\"><h3>كل شهر: الرواتب</h3><ol>\n<li>افتح <b>الرواتب</b> واختر الشهر. البرنامج يحسب راتب كل موظف تلقائياً.</li>\n<li>عدّل ما يخص هذا الشهر فقط: <b>إضافة</b> مع السبب، <b>قسط سلفة</b>، <b>خصم</b> مع السبب، <b>مؤجل</b> إذا حوّلت أقل من الراتب، أو <b>سداد دين</b> إذا عوّضت ديناً سابقاً.</li>\n<li>راجع الأسباب تحت «الصافي» لكل موظف، فهي تشرح لماذا يختلف المبلغ عن راتبه الشهري.</li>\n<li>نزّل <b>ملف NBK</b> وارفعه في خدمة الرواتب في البنك.</li>\n<li>بعد التحويل اضغط <b>اعتماد الشهر</b>. تُسجَّل الأقساط والديون ويُقفل الشهر حتى لا يُحسب شيء مرتين.</li>\n<li>اطبع <b>القسائم</b> ووقّعها مع الموظفين إن رغبت.</li>\n</ol><button type=\"button\" class=\"btn-outline\" data-action=\"guide-go\" data-tab=\"payroll\">افتح الرواتب</button></section>\n<section class=\"g-sec\"><h3>عند حدوث أي شيء (سجّله في يومه)</h3><ul class=\"g-map\">\n<li><b>موظف جديد</b><span>الموظفون ← إضافة موظف: الراتب، تاريخ التعيين، البطاقة المدنية، حساب البنك، المسمى.</span></li>\n<li><b>سلفة أو مخالفة</b><span>السلف والخصومات ← إضافة. تُخصم من الراتب عندما تكتب القسط في كشف الشهر.</span></li>\n<li><b>إجازة</b><span>الإجازات ← إضافة. يُحسب المدفوع وبدون أجر تلقائياً. اطبع نموذج الإجازة للتوقيع.</span></li>\n<li><b>شهادة راتب أو خبرة</b><span>اضغط اسم الموظف ← شهادة راتب / شهادة خبرة ← طباعة.</span></li>\n<li><b>زيادة راتب</b><span>اضغط اسم الموظف ← تعديل ← غيّر الراتب.</span></li>\n<li><b>استقالة أو إنهاء خدمة</b><span>اضغط اسم الموظف ← إنهاء الخدمة ← النوع والتاريخ ← طباعة الكشف (المخالصة).</span></li>\n<li><b>صرف مكافأة نهاية الخدمة</b><span>نهاية الخدمة ← تسجيل دفعة.</span></li>\n<li><b>تجديد إقامة أو جواز</b><span>اضغط اسم الموظف ← تعديل ← الوثائق ← التاريخ الجديد.</span></li>\n</ul></section>\n<section class=\"g-sec\"><h3>نظرة سريعة كل بضعة أيام</h3><p><b>لوحة التحكم</b> فيها قسم «متابعات»: كشف شهر لم يُعتمد، من له دين على الشركة، من في إجازة ومتى يعود، من سيكمل 6 أشهر أو 3 أو 5 سنوات (تتغير حقوقه بالقانون)، والإقامات والجوازات التي تنتهي خلال 60 يوماً.</p>\n<button type=\"button\" class=\"btn-outline\" data-action=\"guide-go\" data-tab=\"dashboard\">افتح لوحة التحكم</button></section>\n<section class=\"g-sec\"><h3>أهم 3 قواعد</h3><ol>\n<li><b>سجّل الشيء يوم يحدث</b>، لا في آخر الشهر: السلفة يوم تُطلب، والإجازة قبل أن تبدأ.</li>\n<li><b>لا تعتمد الشهر إلا بعد التحويل الفعلي</b>، والأرقام مطابقة لما حُوّل.</li>\n<li><b>إذا أخطأت</b> عدّل السجل أو احذفه، وللشهر المعتمد زر «إلغاء الاعتماد» يعيد كل شيء كما كان.</li>\n</ol></section>\n<section class=\"g-sec g-help\"><h3>تحتاج مساعدة؟</h3><p>فريق Prime معك مباشرة على واتساب.</p>\n<a class=\"btn-outline\" href=\"https://wa.me/96565068000\" target=\"_blank\" rel=\"noopener\">واتساب: 65068000</a></section>", en:"<section class=\"g-sec\"><h3>Every month: payroll</h3><ol>\n<li>Open <b>Payroll</b> and pick the month. Each salary is calculated automatically.</li>\n<li>Enter this month\u2019s items only: an <b>addition</b> with a reason, a <b>loan installment</b>, a <b>deduction</b> with a reason, <b>deferred</b> if you pay less than the salary, or <b>debt repaid</b> when you pay back an earlier debt.</li>\n<li>Check the reasons under \u201cNet\u201d: they explain why each amount differs from the monthly salary.</li>\n<li>Download the <b>NBK file</b> and upload it to the bank\u2019s payroll service.</li>\n<li>After the transfer, press <b>Approve the month</b>. Installments and debts are recorded and the month is locked so nothing counts twice.</li>\n<li>Print <b>payslips</b> for employees to sign if you like.</li>\n</ol><button type=\"button\" class=\"btn-outline\" data-action=\"guide-go\" data-tab=\"payroll\">Open payroll</button></section>\n<section class=\"g-sec\"><h3>When something happens (record it the same day)</h3><ul class=\"g-map\">\n<li><b>New employee</b><span>Employees \u2192 Add employee: salary, hire date, civil ID, bank account, job title.</span></li>\n<li><b>Advance or fine</b><span>Loans & deductions \u2192 Add. It is deducted when you enter the installment in the month\u2019s payroll.</span></li>\n<li><b>Leave</b><span>Leave \u2192 Add. Paid and unpaid days are worked out automatically. Print the leave form to sign.</span></li>\n<li><b>Salary or experience certificate</b><span>Click the employee \u2192 Salary / Experience certificate \u2192 Print.</span></li>\n<li><b>Pay rise</b><span>Click the employee \u2192 Edit \u2192 change the salary.</span></li>\n<li><b>Resignation or termination</b><span>Click the employee \u2192 End service \u2192 type and date \u2192 Print statement.</span></li>\n<li><b>End-of-service payment</b><span>End of service \u2192 Record payment.</span></li>\n<li><b>Residency or passport renewal</b><span>Click the employee \u2192 Edit \u2192 Documents \u2192 new date.</span></li>\n</ul></section>\n<section class=\"g-sec\"><h3>A quick look every few days</h3><p>The <b>Dashboard</b> has a \u201cFollow-ups\u201d list: unapproved payroll, who the company owes, who is on leave and when they return, who is reaching 6 months or 3 / 5 years (their rights change by law), and documents expiring within 60 days.</p>\n<button type=\"button\" class=\"btn-outline\" data-action=\"guide-go\" data-tab=\"dashboard\">Open dashboard</button></section>\n<section class=\"g-sec\"><h3>Three rules</h3><ol>\n<li><b>Record things the day they happen</b>, not at month end.</li>\n<li><b>Approve a month only after the actual transfer</b>, with figures matching what was paid.</li>\n<li><b>If you make a mistake</b>, edit or delete the record; an approved month has \u201cUndo approval\u201d.</li>\n</ol></section>\n<section class=\"g-sec g-help\"><h3>Need help?</h3><p>The Prime team is on WhatsApp.</p>\n<a class=\"btn-outline\" href=\"https://wa.me/96565068000\" target=\"_blank\" rel=\"noopener\">WhatsApp: 65068000</a></section>"},
   nav_logout: {ar:'خروج', en:'Logout'},
   nav_dashboard: {ar:'لوحة التحكم', en:'Dashboard'},
   nav_employees: {ar:'الموظفون', en:'Employees'},
@@ -1286,7 +1306,10 @@ const TR = {
   doc_passport_expiry: {ar:'انتهاء جواز السفر', en:'Passport expiry'},
   doc_residency: {ar:'الإقامة', en:'Residency'},
   doc_passport: {ar:'جواز السفر', en:'Passport'},
-  doc_hint: {ar:'يظهر تنبيه في لوحة التحكم قبل انتهاء الإقامة أو الجواز بـ 60 يوماً. لا تُطلب الإقامة للموظف الكويتي.', en:'The dashboard warns 60 days before a residency or passport expires. Residency is not needed for Kuwaiti staff.'},
+  doc_permit: {ar:'إذن العمل', en:'Work permit'},
+  doc_permit_no: {ar:'رقم إذن العمل', en:'Work permit no.'},
+  doc_permit_expiry: {ar:'انتهاء إذن العمل', en:'Work permit expiry'},
+  doc_hint: {ar:'يظهر تنبيه في لوحة التحكم قبل انتهاء الإقامة أو إذن العمل أو الجواز بـ 60 يوماً (شهرين). لا تُطلب الإقامة وإذن العمل للموظف الكويتي.', en:'The dashboard warns 60 days (two months) before a residency, work permit or passport expires. Not needed for Kuwaiti staff.'},
   doc_expired: {ar:'منتهية', en:'Expired'},
   doc_days_left: {ar:'بعد {n} يوم', en:'in {n} days'},
   doc_alert_short: {ar:'وثيقة تنتهي', en:'Document expiring'},
@@ -1846,6 +1869,7 @@ function employeeDocAlerts(emp){
   const out = [];
   const add = function(kind, date){ const n = daysUntil(date); if(n!==null && n <= DOC_SOON_DAYS) out.push({kind:kind, date:date, days:n}); };
   if(!isKuwaiti(emp)) add('residency', emp.residencyExpiry);
+  if(!isKuwaiti(emp)) add('permit', emp.workPermitExpiry);
   add('passport', emp.passportExpiry);
   return out;
 }
@@ -1895,6 +1919,7 @@ let hasArrears = false;
 let hasPayrollRuns = false;
 let hasJobTitle = false;
 let hasGender = false;
+let hasWorkPermit = false;
 let state = defaultState();
 
 /* DB row <-> app object mappers (DB uses snake_case, app uses camelCase) */
@@ -1906,6 +1931,7 @@ function mapEmployeeFromDb(r){
     civilId: r.civil_id || '', nationality: r.nationality || '', jobTitle: r.job_title || '', gender: r.gender || 'm',
     nameEn: r.name_en || '', bankCode: r.bank_code || '', bankAccount: r.bank_account || '',
     residencyExpiry: r.residency_expiry || null, passportExpiry: r.passport_expiry || null,
+    workPermitNo: r.work_permit_no || '', workPermitExpiry: r.work_permit_expiry || null,
     leaveOpeningDate: r.leave_opening_date || null,
     serviceEndDate: r.service_end_date || null,
     terminationType: r.termination_type || null,
@@ -1958,6 +1984,7 @@ async function loadDataFromSupabase(){
   state.eosPayments = eosRes.data.map(mapEosFromDb);
   state.leaveRecords = leaveRes.data.map(mapLeaveFromDb);
   const docProbe = sb.from('employees').select('civil_id').limit(1).then(function(r){ hasDocCols = !r.error; }, function(){ hasDocCols = false; });
+  const permitProbe = sb.from('employees').select('work_permit_expiry').limit(1).then(function(r){ hasWorkPermit = !r.error; }, function(){ hasWorkPermit = false; });
   const genderProbe = sb.from('employees').select('gender').limit(1).then(function(r){ hasGender = !r.error; }, function(){ hasGender = false; });
   const jobProbe = sb.from('employees').select('job_title').limit(1).then(function(r){ hasJobTitle = !r.error; }, function(){ hasJobTitle = false; });
   const arrearsLoad = sb.from('salary_arrears').select('*').then(function(r){
@@ -1965,7 +1992,7 @@ async function loadDataFromSupabase(){
     state.arrears = r.error ? [] : (r.data||[]).map(function(x){ return {id:x.id, employeeId:x.employee_id, month:x.month, kind:x.kind, amount:Number(x.amount), notes:x.notes||''}; });
   }, function(){ hasArrears = false; state.arrears = []; });
   const runsLoad = loadPayrollRuns();
-  await holidaysLoad; await openingProbe; await docProbe; await jobProbe; await genderProbe; await arrearsLoad; await runsLoad;
+  await holidaysLoad; await openingProbe; await docProbe; await jobProbe; await genderProbe; await permitProbe; await arrearsLoad; await runsLoad;
   state.nextEmployeeNo = state.employees.reduce(function(m,e){ return Math.max(m, e.no); }, 0) + 1;
   setSyncStatus(true);
   return true;
@@ -2021,6 +2048,10 @@ function openModal(html){
   const first = box.querySelector('input:not([type=hidden]),select,textarea,button:not(.modal-close)');
   setTimeout(function(){ (first || box).focus({preventScroll:true}); }, 30);
   updateEndServicePreview();
+}
+function openGuide(){
+  openModal('<div class="guide"><div class="modal-header"><h3>'+t('guide_title')+'</h3><button type="button" class="modal-close" data-action="close-modal">×</button></div>'+
+    '<div class="modal-body guide-body">'+t('guide_html')+'</div></div>');
 }
 function closeModal(){
   document.getElementById('modalOverlay').classList.remove('show');
@@ -2331,7 +2362,7 @@ function docAlertsHtml(){
   return '<section class="doc-alerts" aria-labelledby="docAlertsTitle"><h2 id="docAlertsTitle">'+t('doc_alerts_title').replace('{n}', rows.length)+'</h2><ul>'+
     rows.slice(0,8).map(function(r){
       return '<li><button type="button" class="name-link" data-action="open-employee" data-id="'+r.emp.id+'">'+escapeHtml(r.emp.name)+'</button>'+
-        '<span>'+t(r.a.kind==='residency'?'doc_residency':'doc_passport')+' · '+fmtDate(r.a.date)+'</span>'+
+        '<span>'+t(r.a.kind==='residency'?'doc_residency':r.a.kind==='permit'?'doc_permit':'doc_passport')+' · '+fmtDate(r.a.date)+'</span>'+
         (r.a.days<0 ? '<span class="sub-badge inactive">'+t('doc_expired')+'</span>' : '<span class="sub-badge pending">'+t('doc_days_left').replace('{n}', r.a.days)+'</span>')+'</li>';
     }).join('')+'</ul>'+(rows.length>8?'<p class="drw-note">'+t('doc_more').replace('{n}', rows.length-8)+'</p>':'')+'</section>';
 }
@@ -3039,11 +3070,13 @@ function employeeModalHtml(emp){
         '<div class="field full"><label>'+t('field_raise_pct')+'</label><input type="text" inputmode="decimal" name="raisePct" value="'+(emp.raisePct!=null?emp.raisePct:'')+'">'+
           '<div class="hint">'+t('hint_raise')+'</div></div>'+
       '</div></details>'+
-      (hasDocCols ? '<details class="advanced full"'+((emp.civilId||emp.residencyExpiry||emp.passportExpiry)?' open':'')+'><summary>'+t('doc_title')+'</summary><div class="form-grid">'+
+      (hasDocCols ? '<details class="advanced full"'+((emp.civilId||emp.residencyExpiry||emp.passportExpiry||emp.workPermitExpiry)?' open':'')+'><summary>'+t('doc_title')+'</summary><div class="form-grid">'+
         '<div class="field"><label>'+t('doc_civil_id')+'</label><input type="text" inputmode="numeric" name="civilId" maxlength="14" value="'+escapeHtml(emp.civilId||'')+'"></div>'+
         '<div class="field"><label>'+t('doc_nationality')+'</label><input type="text" name="nationality" list="natList" value="'+escapeHtml(emp.nationality||'')+'"><datalist id="natList">'+NATIONALITIES[currentLang==='en'?'en':'ar'].map(function(n){ return '<option value="'+n+'">'; }).join('')+'</datalist></div>'+
         '<div class="field"><label>'+t('doc_residency_expiry')+'</label><input type="date" name="residencyExpiry" value="'+(emp.residencyExpiry||'')+'"></div>'+
         '<div class="field"><label>'+t('doc_passport_expiry')+'</label><input type="date" name="passportExpiry" value="'+(emp.passportExpiry||'')+'"></div>'+
+        (hasWorkPermit ? '<div class="field"><label>'+t('doc_permit_no')+'</label><input type="text" name="workPermitNo" dir="ltr" maxlength="40" value="'+escapeHtml(emp.workPermitNo||'')+'"></div>'+
+          '<div class="field"><label>'+t('doc_permit_expiry')+'</label><input type="date" name="workPermitExpiry" value="'+(emp.workPermitExpiry||'')+'"></div>' : '')+
         '<div class="hint full">'+t('doc_hint')+'</div>'+
         '<div class="field full"><label>'+t('bank_name_en')+'</label><input type="text" name="nameEn" dir="ltr" autocapitalize="characters" value="'+escapeHtml(emp.nameEn||'')+'"><div class="hint">'+t('bank_name_en_hint')+'</div></div>'+
         '<div class="field"><label>'+t('bank_bank')+'</label><select name="bankCode"><option value="">—</option>'+BANK_CODES.map(function(b){ return '<option value="'+b[0]+'" '+(emp.bankCode===b[0]?'selected':'')+'>'+b[0]+' — '+escapeHtml(bankName(b[0]))+'</option>'; }).join('')+'</select></div>'+
@@ -3093,6 +3126,7 @@ async function handleEmployeeSubmit(form){
     if(cid && !/^\d{12}$/.test(cid)){ fieldError(form,'civilId',t('err_civil_id')); return; }
     data.civilId = cid; data.nationality = (form.nationality.value||'').trim();
     data.residencyExpiry = form.residencyExpiry.value || null; data.passportExpiry = form.passportExpiry.value || null;
+    if(hasWorkPermit){ data.workPermitNo = normalizeDigits(form.workPermitNo.value||'').trim().slice(0,40); data.workPermitExpiry = form.workPermitExpiry.value || null; }
     data.nameEn = (form.nameEn.value||'').trim().toUpperCase();
     if(data.nameEn && !/^[A-Z][A-Z .'\-]*$/.test(data.nameEn)){ fieldError(form,'nameEn',t('err_name_en')); return; }
     let acct = normalizeDigits(form.bankAccount.value||'').replace(/\s/g,'').toUpperCase();
@@ -3129,6 +3163,7 @@ async function handleEmployeeSubmit(form){
   if(hasOpeningLeaveCols){ dbRow.leave_opening_balance = data.leaveOpeningBalance; dbRow.leave_opening_date = data.leaveOpeningDate; }
   if(hasDocCols){ dbRow.name_en = data.nameEn || null; dbRow.bank_code = data.bankCode || null; dbRow.bank_account = data.bankAccount || null; }
   if(hasDocCols){ dbRow.civil_id = data.civilId || null; dbRow.nationality = data.nationality || null; dbRow.residency_expiry = data.residencyExpiry; dbRow.passport_expiry = data.passportExpiry; }
+  if(hasDocCols && hasWorkPermit){ dbRow.work_permit_no = data.workPermitNo || null; dbRow.work_permit_expiry = data.workPermitExpiry; }
   if(id){
     const { error } = await sb.from('employees').update(dbRow).eq('id', id);
     if(error){ writeFailed(t('err_save_failed'), error); return; }
@@ -3295,6 +3330,7 @@ function renderDrawer(){
       kv(t('doc_civil_id'), emp.civilId ? numSpan(escapeHtml(emp.civilId)) : '—')+
       kv(t('doc_nationality'), emp.nationality ? escapeHtml(emp.nationality) : '—')+
       (isKuwaiti(emp) ? '' : kv(t('doc_residency_expiry'), (emp.residencyExpiry ? fmtDate(emp.residencyExpiry) : '—')+docBadge(emp.residencyExpiry)))+
+      (hasWorkPermit && !isKuwaiti(emp) ? kv(t('doc_permit'), (emp.workPermitNo ? '<bdi dir="ltr">'+escapeHtml(emp.workPermitNo)+'</bdi> · ' : '')+(emp.workPermitExpiry ? fmtDate(emp.workPermitExpiry) : '—')+docBadge(emp.workPermitExpiry)) : '')+
       kv(t('doc_passport_expiry'), (emp.passportExpiry ? fmtDate(emp.passportExpiry) : '—')+docBadge(emp.passportExpiry)));
   }
   h += drawerSection(t('drw_salary'),
@@ -4440,6 +4476,8 @@ document.addEventListener('click', function(e){
   else if(action==='drw-exp') printExperienceCertificate(id);
   else if(action==='delete-leave') deleteLeaveRec(id);
   else if(action==='open-data-manage') openDataManageModal();
+  else if(action==='open-guide') openGuide();
+  else if(action==='guide-go'){ closeModal(); switchTab(btn.dataset.tab); }
   else if(action==='export-json') exportJsonBackup();
   else if(action==='export-excel') loadXlsx().then(exportExcel, function(){ toast(t('err_excel_lib'),'error'); });
   else if(action==='reset-all') resetAllData();
