@@ -367,6 +367,13 @@ html[dir="ltr"] .num{direction:ltr;}
 .notice-bar div.nb-actions{flex-direction:row;flex:0 0 auto;gap:8px;flex-wrap:wrap;}
 .btn-outline.danger-outline{color:var(--red);border-color:#f0c4c4;}
 .btn-outline.danger-outline:hover{background:#fdf0f0;}
+.pay-why{list-style:none;margin:4px 0 0;padding:0;font-size:.74rem;line-height:1.5;font-weight:400;max-width:230px;}
+.pay-why li.up{color:var(--green);}
+.pay-why li.down{color:var(--red);}
+.pay-why li.same{color:var(--text-muted);}
+.pay-note-in{display:block;width:100%;min-width:120px;min-height:34px;height:34px;margin-top:6px;padding:4px 8px;font:inherit;font-size:.76rem;border:1px solid var(--border);border-radius:8px;background:#fff;}
+.pay-note-in.needs{border-color:var(--amber);background:#fffaf2;}
+.drw-why{display:block;color:var(--text-muted);font-size:.74rem;margin-top:2px;}
 .pay-guide{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:.86rem;}
 .pay-guide summary{cursor:pointer;font-weight:700;color:var(--navy);min-height:28px;display:flex;align-items:center;}
 .pay-guide ol{margin:10px 0 2px;padding-inline-start:20px;line-height:1.9;color:var(--text);}
@@ -1183,7 +1190,7 @@ const TR = {
   pay_unapprove_legacy: {ar:'لا يمكن إلغاء هذا الاعتماد تلقائياً. تواصل مع الدعم عبر واتساب.', en:'This approval cannot be undone automatically. Contact support on WhatsApp.'},
   pay_guide_title: {ar:'كيف أستخدم كشف الرواتب؟', en:'How do I use the payroll sheet?'},
   pay_guide_1: {ar:'<b>اختر الشهر</b> من أعلى الصفحة. الراتب يُحسب تلقائياً من بيانات كل موظف، ويُخصم منه أيام الإجازة بدون أجر.', en:'<b>Pick the month</b> at the top. Salaries are calculated from each employee\u2019s record, minus unpaid leave days.'},
-  pay_guide_2: {ar:'<b>عبّئ ما يخص هذا الشهر فقط:</b> إضافات أو مكافأة، قسط سلفة يُخصم، خصومات أخرى، «مؤجل» إذا حوّلت أقل من الراتب (يصير ديناً على الشركة)، و«سداد دين» إذا عوّضت موظفاً عن دين سابق.', en:'<b>Fill in this month only:</b> additions or bonus, a loan installment to deduct, other deductions, \u201cDeferred\u201d if you pay less than the salary (it becomes company debt), and \u201cDebt repaid\u201d when you pay back an earlier debt.'},
+  pay_guide_2: {ar:'<b>عبّئ ما يخص هذا الشهر فقط، واكتب السبب:</b> إضافات أو مكافأة، قسط سلفة يُخصم، خصومات أخرى، «مؤجل» إذا حوّلت أقل من الراتب (يصير ديناً على الشركة)، و«سداد دين» إذا عوّضت موظفاً عن دين سابق.', en:'<b>Fill in this month only, with a reason:</b> additions or bonus, a loan installment to deduct, other deductions, \u201cDeferred\u201d if you pay less than the salary (it becomes company debt), and \u201cDebt repaid\u201d when you pay back an earlier debt.'},
   pay_guide_3: {ar:'<b>نزّل «ملف NBK»</b> وارفعه في خدمة الرواتب في البنك. عمود «الصافي» هو المبلغ اللي يُحوَّل لكل موظف.', en:'<b>Download the NBK file</b> and upload it to the bank\u2019s payroll service. The \u201cNet\u201d column is what each employee receives.'},
   pay_guide_4: {ar:'<b>بعد ما يتم التحويل اضغط «اعتماد الشهر».</b> يُخصم قسط السلفة من رصيدها، ويُسجَّل المؤجل والسداد في ديون الموظف، ويُقفل الكشف حتى لا يُحسب شيء مرتين.', en:'<b>After the transfer, press \u201cApprove the month\u201d.</b> Installments come off the loan balance, deferrals and repayments go into the employee\u2019s debt record, and the sheet is locked so nothing is counted twice.'},
   pay_guide_5: {ar:'<b>بعد الاعتماد</b> تقدر تطبع قسائم الرواتب. وإذا اكتشفت خطأ اضغط «إلغاء الاعتماد»: يرجع كل شيء كما كان وتعدّل ثم تعتمد من جديد.', en:'<b>After approval</b> you can print payslips. If you find a mistake, press \u201cUndo approval\u201d: everything is reversed so you can fix it and approve again.'},
@@ -1223,7 +1230,23 @@ const TR = {
   pay_export_incomplete: {ar:'{n} موظف بدون بيانات تحويل كاملة ولن يُضافوا للملف: {names}. متابعة بالباقين؟', en:'{n} employees lack transfer details and will be left out: {names}. Continue with the rest?'},
   pay_export_anyway: {ar:'متابعة', en:'Continue'},
   pay_nothing_to_export: {ar:'لا يوجد موظف ببيانات تحويل كاملة', en:'No employee has complete transfer details'},
-  pay_exported: {ar:'تم إنشاء ملف التحويل ({n} موظف)', en:'Salary file created ({n} employees)'},
+  pay_exported: {ar:'تم إنشاء ملف التحويل ({n} موظف). بعد ما يتم التحويل في البنك اضغط «اعتماد الشهر».', en:'Salary file created ({n} employees). After the bank transfer, press \u201cApprove the month\u201d.'},
+  dif_same: {ar:'= الراتب الشهري', en:'= monthly salary'},
+  dif_days: {ar:'أيام عمل {d} من {m}', en:'{d} of {m} days worked'},
+  dif_bonus: {ar:'إضافة', en:'Addition'},
+  dif_repay: {ar:'سداد دين على الشركة', en:'Company debt repaid'},
+  dif_unpaid: {ar:'إجازة بدون أجر ({n} يوم)', en:'Unpaid leave ({n} days)'},
+  dif_loan: {ar:'قسط سلفة', en:'Loan installment'},
+  dif_other: {ar:'خصم', en:'Deduction'},
+  dif_defer: {ar:'مؤجل — يُسجَّل ديناً على الشركة', en:'Deferred — recorded as company debt'},
+  pay_reason: {ar:'السبب', en:'Reason'},
+  pay_reason_ph_bonus: {ar:'سبب الإضافة، مثلاً: أوفرتايم', en:'Why, e.g. overtime'},
+  pay_reason_ph_other: {ar:'سبب الخصم، مثلاً: تأخير', en:'Why, e.g. lateness'},
+  pay_reason_needed: {ar:'اكتب سبب الإضافة أو الخصم قبل الاعتماد: {names}', en:'Add a reason for each addition or deduction before approving: {names}'},
+  pay_confirm_title: {ar:'اعتماد {m} — راجع الفروقات قبل التأكيد:', en:'Approve {m} — review the differences:'},
+  pay_confirm_none: {ar:'كل الموظفين يستلمون رواتبهم الشهرية كاملة بدون إضافات أو خصومات.', en:'Everyone receives their full monthly salary, with no additions or deductions.'},
+  pay_confirm_more: {ar:'و{n} موظفين آخرين', en:'and {n} more'},
+  pay_confirm_total: {ar:'إجمالي التحويل: {t}', en:'Total transfer: {t}'},
   pay_apply_loans: {ar:'استقطاع أقساط السلف', en:'Deduct loan installments'},
   pay_loans_applied: {ar:'تم استقطاع أقساط هذا الشهر', en:'Installments deducted for this month'},
   pay_apply_confirm: {ar:'سيتم تسجيل أقساط السلف لـ {n} موظف بإجمالي {total} عن {m}، وتُخصم من أرصدة سلفهم. نفّذ هذا بعد تحويل الرواتب.', en:'Loan installments for {n} employees totalling {total} for {m} will be recorded against their loans. Do this after salaries are transferred.'},
@@ -2419,13 +2442,19 @@ function payrollLine(emp, m, draft){
   const beforeDefer = round3(gross + bonus - unpaid - loan - other + repay);
   const defer = Math.min(safeNum(d.defer), Math.max(0, beforeDefer));
   const net = round3(beforeDefer - defer);
+  // Which loans this installment comes off (oldest first) - shown as the reason
+  let left = loan; const loanNames = [];
+  state.loans.filter(function(x){ return x.employeeId===emp.id && safeNum(x.original)-safeNum(x.deducted) > 0.0005; })
+    .sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); })
+    .forEach(function(x){ if(left <= 0.0005) return; left -= Math.min(left, safeNum(x.original)-safeNum(x.deducted)); loanNames.push(x.description || (x.type==='violation'?t('badge_violation'):t('badge_advance'))); });
   const missing = [];
   if(!emp.nameEn) missing.push(t('bank_name_en'));
   if(!emp.civilId) missing.push(t('doc_civil_id'));
   if(!emp.bankAccount || !emp.bankCode) missing.push(t('bank_account'));
   const f = workedDays / b.days;
   const parts = {basic: round3(safeNum(emp.basic)*f), housing: round3(safeNum(emp.housing)*f), transport: round3(safeNum(emp.transport)*f), allowance: round3(safeNum(emp.other)*f)};
-  return {emp:emp, parts:parts, workedDays:workedDays, monthDays:b.days, prorated: workedDays < b.days, gross:gross, bonus:bonus, unpaidDays:unpaidDays, unpaid:unpaid,
+  return {emp:emp, parts:parts, full:round3(calcCurrentSalary(emp)), bonusNote:String(d.bonusNote||''), otherNote:String(d.otherNote||''), loanNote:loanNames.join('، '),
+    workedDays:workedDays, monthDays:b.days, prorated: workedDays < b.days, gross:gross, bonus:bonus, unpaidDays:unpaidDays, unpaid:unpaid,
     loan:loan, loanRemaining:loanRemaining, other:other, owedBefore:owedBefore, repay:repay, defer:defer, net:net, missing:missing};
 }
 /* ---- Approved months: frozen copy of the sheet in payroll_runs ---- */
@@ -2440,6 +2469,7 @@ const SNAP_KEYS = ['workedDays','monthDays','gross','bonus','unpaidDays','unpaid
 function snapshotLine(l){
   const o = {empId:l.emp.id, no:l.emp.no, name:l.emp.name, nameEn:l.emp.nameEn||'', jobTitle:l.emp.jobTitle||'', civilId:l.emp.civilId||'', bankCode:l.emp.bankCode||'', bankAccount:l.emp.bankAccount||'', parts:l.parts};
   SNAP_KEYS.forEach(function(k){ o[k] = l[k]; });
+  o.full = l.full; o.bonusNote = l.bonusNote||''; o.otherNote = l.otherNote||''; o.loanNote = l.loanNote||'';
   return o;
 }
 function lineFromSnapshot(sn){
@@ -2448,11 +2478,28 @@ function lineFromSnapshot(sn){
   const emp = Object.assign({}, live || {id:sn.empId}, {no:sn.no, name:sn.name, nameEn:sn.nameEn, jobTitle: sn.jobTitle!=null ? sn.jobTitle : ((live&&live.jobTitle)||''), civilId:sn.civilId, bankCode:sn.bankCode, bankAccount:sn.bankAccount});
   const l = {emp:emp, parts:sn.parts||{}, frozen:true, loanRemaining:0, owedBefore:0, prorated: sn.workedDays < sn.monthDays, missing:[]};
   SNAP_KEYS.forEach(function(k){ l[k] = safeNum(sn[k]); });
+  l.full = safeNum(sn.full) || (l.workedDays ? round3(l.gross * l.monthDays / l.workedDays) : l.gross);
+  l.bonusNote = sn.bonusNote||''; l.otherNote = sn.otherNote||''; l.loanNote = sn.loanNote||'';
   if(!emp.nameEn) l.missing.push(t('bank_name_en'));
   if(!emp.civilId) l.missing.push(t('doc_civil_id'));
   if(!emp.bankAccount || !emp.bankCode) l.missing.push(t('bank_account'));
   return l;
 }
+/* Why this person's transfer differs from their monthly salary: signed amounts with reasons */
+function payDiffs(l){
+  const out = [];
+  const add = function(amt, label, note){ amt = round3(amt); if(Math.abs(amt) > 0.0005) out.push({amt:amt, label:label + (note ? ': '+note : '')}); };
+  if(l.workedDays < l.monthDays) add(l.gross - l.full, t('dif_days').replace('{d}', l.workedDays).replace('{m}', l.monthDays));
+  add(l.bonus, t('dif_bonus'), l.bonusNote);
+  add(l.repay, t('dif_repay'));
+  add(-l.unpaid, t('dif_unpaid').replace('{n}', String(fmtNum(l.unpaidDays,1)).replace(/<[^>]+>/g,'')));
+  add(-l.loan, t('dif_loan'), l.loanNote);
+  add(-l.other, t('dif_other'), l.otherNote);
+  add(-l.defer, t('dif_defer'));
+  return out;
+}
+function diffAmt(a){ return (a > 0 ? '+ ' : '− ') + fmtKWD(Math.abs(a)).replace(/<[^>]+>/g,''); }
+function payDiffsText(l){ return payDiffs(l).map(function(x){ return diffAmt(x.amt)+' '+x.label; }).join(' · '); }
 function payrollLines(m){
   const run = getPayrollRun(m);
   if(run) return (run.lines||[]).map(lineFromSnapshot);
@@ -2499,17 +2546,20 @@ function renderPayrollShell(){
     '<th>'+t('pay_other')+'</th>'+(hasArrears?'<th>'+t('pay_defer')+'</th><th>'+t('pay_repay')+'</th>':'')+'<th>'+t('pay_net')+'</th></tr></thead><tbody>'+
     lines.map(function(l){
       const id = l.emp.id;
+      const noteIn = function(field, val, ph){ return '<input type="text" class="pay-note-in'+(val?'':' needs')+'" data-note="'+field+'" data-id="'+id+'" value="'+escapeHtml(val||'')+'" maxlength="60" placeholder="'+t(ph)+'" aria-label="'+t('pay_reason')+' — '+escapeHtml(l.emp.name)+'">'; };
+      const why = payDiffs(l);
       const num = function(field, val, max){ if(l.frozen) return val ? fmtKWD(val) : '—'; return '<input type="text" inputmode="decimal" class="pay-in" data-pay="'+field+'" data-id="'+id+'" value="'+(val?val:'')+'" placeholder="0" aria-label="'+t('pay_'+field)+' — '+escapeHtml(l.emp.name)+'"'+(max!=null?' data-max="'+max+'"':'')+'>'; };
       return '<tr>'+
         '<td>'+empLink(id)+(l.prorated?'<div class="cell-note">'+t('pay_prorated').replace('{d}', l.workedDays).replace('{m}', l.monthDays)+'</div>':'')+(l.missing.length?'<div class="cell-note warn-note">'+t('pay_missing_short')+'</div>':'')+'</td>'+
         '<td>'+fmtKWD(l.gross)+'</td>'+
-        '<td>'+num('bonus', l.bonus)+'</td>'+
+        '<td>'+num('bonus', l.bonus)+(!l.frozen && l.bonus ? noteIn('bonusNote', l.bonusNote, 'pay_reason_ph_bonus') : '')+'</td>'+
         '<td>'+(l.unpaid ? '− '+fmtKWD(l.unpaid)+'<div class="cell-note">'+fmtNum(l.unpaidDays,1)+' '+t('day_suffix')+'</div>' : '—')+'</td>'+
         '<td>'+((l.loanRemaining>0 || (l.frozen && l.loan)) ? num('loan', l.loan, l.loanRemaining)+(l.frozen ? '' : '<div class="cell-note">'+t('pay_loan_left')+' '+fmtKWD(l.loanRemaining)+'</div>') : '—')+'</td>'+
-        '<td>'+num('other', l.other)+'</td>'+
+        '<td>'+num('other', l.other)+(!l.frozen && l.other ? noteIn('otherNote', l.otherNote, 'pay_reason_ph_other') : '')+'</td>'+
         (hasArrears ? '<td>'+num('defer', l.defer)+'</td>'+
           '<td>'+((l.owedBefore>0 || (l.frozen && l.repay)) ? num('repay', l.repay, l.owedBefore)+(l.frozen ? '' : '<div class="cell-note">'+t('arr_owed_short')+' '+fmtKWD(l.owedBefore)+'</div>') : '—')+'</td>' : '')+
-        '<td class="pay-net"><b>'+fmtKWD(l.net)+'</b>'+(run ? '<button type="button" class="slip-btn" data-action="pay-slip" data-id="'+id+'" title="'+t('pay_slip')+'" aria-label="'+t('pay_slip')+' — '+escapeHtml(l.emp.name)+'">'+ICON.print+'</button>' : '')+'</td></tr>';
+        '<td class="pay-net"><b>'+fmtKWD(l.net)+'</b>'+
+          '<ul class="pay-why">'+(why.length ? why.map(function(x){ return '<li class="'+(x.amt>0?'up':'down')+'">'+diffAmt(x.amt)+' '+escapeHtml(x.label)+'</li>'; }).join('') : '<li class="same">'+t('dif_same')+'</li>')+'</ul>'+(run ? '<button type="button" class="slip-btn" data-action="pay-slip" data-id="'+id+'" title="'+t('pay_slip')+'" aria-label="'+t('pay_slip')+' — '+escapeHtml(l.emp.name)+'">'+ICON.print+'</button>' : '')+'</td></tr>';
     }).join('')+
     '</tbody></table></div></div>';
   h += '<div class="pay-actions">'+
@@ -2669,11 +2719,11 @@ function printPayslips(empId, month){
     '</table>';
     h += '<div class="slip-cols"><div><h2>'+t('slip_earnings')+'</h2><table class="prt-list">'+
       row(t('drw_basic'), p.basic||0)+ (p.housing?row(t('drw_housing'), p.housing):'')+ (p.transport?row(t('drw_transport'), p.transport):'')+ (p.allowance?row(t('drw_other'), p.allowance):'')+
-      (l.bonus?row(t('pay_bonus'), l.bonus):'')+ (l.repay?row(t('pay_repay'), l.repay):'')+
+      (l.bonus?row(t('pay_bonus')+(l.bonusNote?' — '+escapeHtml(l.bonusNote):''), l.bonus):'')+ (l.repay?row(t('pay_repay'), l.repay):'')+
       row(t('slip_total_earn'), earnTotal, 'tot')+'</table></div>';
     h += '<div><h2>'+t('slip_deductions')+'</h2><table class="prt-list">'+
-      (l.unpaid?row(t('pay_unpaid')+' ('+fmtNum(l.unpaidDays,1)+' '+t('day_suffix')+')', l.unpaid):'')+ (l.loan?row(t('pay_loan'), l.loan):'')+
-      (l.other?row(t('pay_other'), l.other):'')+ (l.defer?row(t('pay_defer'), l.defer):'')+
+      (l.unpaid?row(t('pay_unpaid')+' ('+fmtNum(l.unpaidDays,1)+' '+t('day_suffix')+')', l.unpaid):'')+ (l.loan?row(t('pay_loan')+(l.loanNote?' — '+escapeHtml(l.loanNote):''), l.loan):'')+
+      (l.other?row(t('pay_other')+(l.otherNote?' — '+escapeHtml(l.otherNote):''), l.other):'')+ (l.defer?row(t('pay_defer'), l.defer):'')+
       (dedTotal ? '' : '<tr><th>—</th><td>—</td></tr>')+
       row(t('slip_total_ded'), dedTotal, 'tot')+'</table></div></div>';
     h += '<div class="slip-net"><span>'+t('pay_net')+'</span><b>'+fmtKWD(l.net)+'</b></div>';
@@ -2722,10 +2772,12 @@ async function exportPayrollSheet(){
   const ar = currentLang !== 'en';
   const head = ar ? ['الرقم','الموظف','أيام العمل','الراتب','إضافات','خصم أيام بدون أجر','قسط السلفة','خصومات أخرى','الصافي','البنك','الحساب / IBAN']
                   : ['No.','Employee','Days worked','Salary','Additions','Unpaid leave','Loan installment','Other deductions','Net pay','Bank','Account / IBAN'];
+  head.push(ar ? 'سبب الفرق عن الراتب' : 'Why it differs from salary');
   if(hasArrears){ head.splice(8, 0, ar?'مؤجل (دين)':'Deferred (owed)', ar?'سداد دين':'Debt repaid'); }
   const rows = [[(ar?'كشف رواتب ':'Payroll ')+payrollMonthLabel(m)+(currentCompanyName?' — '+currentCompanyName:'')], [], head].concat(lines.map(function(l){
     const r = [l.emp.no, l.emp.name, l.workedDays+'/'+l.monthDays, l.gross, l.bonus, l.unpaid, l.loan, l.other, l.net, l.emp.bankCode||'', l.emp.bankAccount||''];
     if(hasArrears) r.splice(8, 0, l.defer, l.repay);
+    r.push(payDiffsText(l) || t('dif_same'));
     return r;
   }));
   const sum = function(k){ return round3(lines.reduce(function(a,l){ return a + l[k]; }, 0)); };
@@ -2733,7 +2785,7 @@ async function exportPayrollSheet(){
   if(hasArrears) totalRow.splice(8, 0, sum('defer'), sum('repay'));
   rows.push(totalRow);
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:6},{wch:30},{wch:11},{wch:12},{wch:11},{wch:16},{wch:14},{wch:15},{wch:12},{wch:8},{wch:32}];
+  ws['!cols'] = [{wch:6},{wch:30},{wch:11},{wch:12},{wch:11},{wch:16},{wch:14},{wch:15},{wch:12},{wch:8},{wch:32}].concat(hasArrears?[{wch:12},{wch:12}]:[]).concat([{wch:60}]);
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, ar?'كشف الرواتب':'Payroll');
   if(ar) wb.Workbook = {Views:[{RTL:true}]};
   XLSX.writeFile(wb, 'Payroll_'+m+'.xlsx');
@@ -2745,8 +2797,21 @@ async function applyPayrollLoans(){
   if(!lines.length && !hasPayrollRuns) return;
   const sum = function(k){ return lines.reduce(function(a,l){ return a + l[k]; }, 0); };
   const plain = function(n){ return fmtKWD(n).replace(/<[^>]+>/g,''); };
-  const msg = t('pay_apply_month_confirm').replace('{m}', payrollMonthLabel(m))
+  let msg = t('pay_apply_month_confirm').replace('{m}', payrollMonthLabel(m))
     .replace('{loans}', plain(sum('loan'))).replace('{defer}', plain(sum('defer'))).replace('{repay}', plain(sum('repay')));
+  if(hasPayrollRuns){
+    const everyone = payrollLines(m);
+    const noReason = everyone.filter(function(l){ return (l.bonus > 0 && !l.bonusNote) || (l.other > 0 && !l.otherNote); });
+    if(noReason.length){
+      toast(t('pay_reason_needed').replace('{names}', noReason.map(function(l){ return l.emp.name; }).join('، ')), 'error');
+      const first = document.querySelector('.pay-note-in.needs'); if(first) first.focus();
+      return;
+    }
+    const changed = everyone.filter(function(l){ return payDiffs(l).length; });
+    msg = t('pay_confirm_title').replace('{m}', payrollMonthLabel(m))+'\n'+
+      (changed.length ? changed.slice(0,10).map(function(l){ return '• '+l.emp.name+': '+plain(l.net)+'\n   '+payDiffsText(l); }).join('\n')+(changed.length>10 ? '\n'+t('pay_confirm_more').replace('{n}', changed.length-10) : '') : t('pay_confirm_none'))+
+      '\n'+t('pay_confirm_total').replace('{t}', plain(everyone.reduce(function(a,l){ return a + l.net; }, 0)));
+  }
   if(!(await confirmAction({title:t('pay_apply_month'), message:msg + (hasPayrollRuns ? '\n'+t('pay_apply_freeze') : ''), confirmLabel:t('pay_apply_month')}))) return;
   if(hasPayrollRuns){
     // One database transaction: freeze the sheet, deduct installments, record debt entries (all or nothing)
@@ -3260,7 +3325,8 @@ function renderDrawer(){
   if(hasPayrollRuns){
     const hist = employeePayHistory(emp.id);
     h += drawerSection(t('drw_pay_history'), hist.length ? '<ul class="drw-list">'+hist.slice(0,12).map(function(x){
-        return '<li><span>'+escapeHtml(payrollMonthLabel(x.month))+(x.line.defer?' · '+t('pay_defer')+' '+fmtKWD(x.line.defer):'')+'</span>'+
+        const why = payDiffsText(x.line);
+        return '<li><span>'+escapeHtml(payrollMonthLabel(x.month))+(why?'<small class="drw-why">'+escapeHtml(why)+'</small>':'')+'</span>'+
           '<b>'+fmtKWD(x.line.net)+'<button type="button" class="slip-btn" data-action="drw-slip" data-id="'+emp.id+'" data-m="'+x.month+'" title="'+t('pay_slip')+'" aria-label="'+t('pay_slip')+' — '+escapeHtml(payrollMonthLabel(x.month))+'">'+ICON.print+'</button></b></li>';
       }).join('')+'</ul>' : '<p class="drw-empty">'+t('drw_pay_none')+'</p>');
   }
@@ -4434,6 +4500,12 @@ document.addEventListener('input', function(e){
 });
 document.addEventListener('change', function(e){
   if(e.target.id==='payMonth' && e.target.value){ uiState.payMonth = e.target.value; renderPayrollShell(); return; }
+  if(e.target.classList && e.target.classList.contains('pay-note-in')){
+    const m = uiState.payMonth, d = loadPayrollDraft(m), id = e.target.dataset.id;
+    d[id] = d[id] || {}; d[id][e.target.dataset.note] = normText(e.target.value).slice(0,60); savePayrollDraft(m, d);
+    renderPayrollShell();
+    return;
+  }
   if(e.target.classList && e.target.classList.contains('pay-in')){
     const m = uiState.payMonth, d = loadPayrollDraft(m), id = e.target.dataset.id, f = e.target.dataset.pay;
     let v = parseAmount(e.target.value); if(isNaN(v) || v < 0) v = 0;
