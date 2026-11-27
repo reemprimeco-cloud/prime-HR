@@ -364,6 +364,13 @@ html[dir="ltr"] .num{direction:ltr;}
 .notice-bar.approved{background:#e9f7ef;border-color:#bfe5cd;}
 .notice-bar.approved b{color:var(--green);}
 .notice-bar .btn-outline{width:auto;flex-shrink:0;}
+.notice-bar div.nb-actions{flex-direction:row;flex:0 0 auto;gap:8px;flex-wrap:wrap;}
+.btn-outline.danger-outline{color:var(--red);border-color:#f0c4c4;}
+.btn-outline.danger-outline:hover{background:#fdf0f0;}
+.pay-guide{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:.86rem;}
+.pay-guide summary{cursor:pointer;font-weight:700;color:var(--navy);min-height:28px;display:flex;align-items:center;}
+.pay-guide ol{margin:10px 0 2px;padding-inline-start:20px;line-height:1.9;color:var(--text);}
+.pay-guide li{margin-bottom:4px;}
 .slip-btn{margin-inline-start:8px;vertical-align:middle;background:none;border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;color:var(--navy);cursor:pointer;}
 .slip-btn svg{width:16px;height:16px;}
 .drw-job{color:var(--navy);font-weight:700;}
@@ -1104,7 +1111,7 @@ const TR = {
   btn_end_service: {ar:'إنهاء الخدمة', en:'End service'},
   btn_reactivate: {ar:'إعادة تفعيل', en:'Reactivate'},
   btn_close: {ar:'إغلاق', en:'Close'},
-  pay_apply_freeze: {ar:'بعد الاعتماد يُحفظ كشف هذا الشهر كما هو ولا يمكن تعديله أو اعتماده مرة أخرى من أي جهاز.', en:'After approval this month\u2019s sheet is saved as-is and cannot be edited or approved again from any device.'},
+  pay_apply_freeze: {ar:'بعد الاعتماد يُقفل كشف هذا الشهر على كل الأجهزة. للتعديل لاحقاً استخدم «إلغاء الاعتماد».', en:'After approval this month\u2019s sheet is locked on every device. To change it later, use \u201cUndo approval\u201d.'},
   pay_already_approved: {ar:'هذا الشهر معتمد مسبقاً (ربما من جهاز آخر). عُرضت النسخة المعتمدة.', en:'This month was already approved (perhaps on another device). Showing the approved copy.'},
   pay_approved_title: {ar:'كشف معتمد', en:'Approved payroll'},
   pay_approved_text: {ar:'اعتُمد بتاريخ {d}. الأرقام مثبّتة كما كانت عند الاعتماد، وملف البنك وExcel والقسائم تُصدَّر منها.', en:'Approved on {d}. Figures are frozen as approved; the bank file, Excel and payslips are produced from them.'},
@@ -1170,6 +1177,16 @@ const TR = {
   pay_defer_total: {ar:'مؤجل هذا الشهر', en:'Deferred this month'},
   pay_repay_total: {ar:'سداد ديون:', en:'Debts repaid:'},
   pay_apply_month: {ar:'اعتماد الشهر', en:'Approve the month'},
+  pay_unapprove: {ar:'إلغاء الاعتماد', en:'Undo approval'},
+  pay_unapprove_confirm: {ar:'إلغاء اعتماد {m}؟\n• تُرجَع أقساط السلف المخصومة: {loans}\n• يُلغى سداد الديون المسجّل: {repay} (يرجع الدين كما كان)\n• يُلغى المؤجل المسجّل ديناً: {defer}\nبعدها يرجع الكشف قابلاً للتعديل بنفس الأرقام، فتصحّح الخطأ ثم تعتمده من جديد. إلغاء الاعتماد لا يؤثر على أي تحويل تم في البنك.', en:'Undo the approval of {m}?\n• Loan installments returned: {loans}\n• Recorded debt repayments cancelled: {repay} (the debt goes back as it was)\n• Recorded deferrals cancelled: {defer}\nThe sheet becomes editable again with the same figures so you can fix it and approve again. This does not affect any bank transfer already made.'},
+  pay_unapproved_done: {ar:'أُلغي الاعتماد. عدّل الكشف ثم اعتمده من جديد.', en:'Approval undone. Edit the sheet, then approve it again.'},
+  pay_unapprove_legacy: {ar:'لا يمكن إلغاء هذا الاعتماد تلقائياً. تواصل مع الدعم عبر واتساب.', en:'This approval cannot be undone automatically. Contact support on WhatsApp.'},
+  pay_guide_title: {ar:'كيف أستخدم كشف الرواتب؟', en:'How do I use the payroll sheet?'},
+  pay_guide_1: {ar:'<b>اختر الشهر</b> من أعلى الصفحة. الراتب يُحسب تلقائياً من بيانات كل موظف، ويُخصم منه أيام الإجازة بدون أجر.', en:'<b>Pick the month</b> at the top. Salaries are calculated from each employee\u2019s record, minus unpaid leave days.'},
+  pay_guide_2: {ar:'<b>عبّئ ما يخص هذا الشهر فقط:</b> إضافات أو مكافأة، قسط سلفة يُخصم، خصومات أخرى، «مؤجل» إذا حوّلت أقل من الراتب (يصير ديناً على الشركة)، و«سداد دين» إذا عوّضت موظفاً عن دين سابق.', en:'<b>Fill in this month only:</b> additions or bonus, a loan installment to deduct, other deductions, \u201cDeferred\u201d if you pay less than the salary (it becomes company debt), and \u201cDebt repaid\u201d when you pay back an earlier debt.'},
+  pay_guide_3: {ar:'<b>نزّل «ملف NBK»</b> وارفعه في خدمة الرواتب في البنك. عمود «الصافي» هو المبلغ اللي يُحوَّل لكل موظف.', en:'<b>Download the NBK file</b> and upload it to the bank\u2019s payroll service. The \u201cNet\u201d column is what each employee receives.'},
+  pay_guide_4: {ar:'<b>بعد ما يتم التحويل اضغط «اعتماد الشهر».</b> يُخصم قسط السلفة من رصيدها، ويُسجَّل المؤجل والسداد في ديون الموظف، ويُقفل الكشف حتى لا يُحسب شيء مرتين.', en:'<b>After the transfer, press \u201cApprove the month\u201d.</b> Installments come off the loan balance, deferrals and repayments go into the employee\u2019s debt record, and the sheet is locked so nothing is counted twice.'},
+  pay_guide_5: {ar:'<b>بعد الاعتماد</b> تقدر تطبع قسائم الرواتب. وإذا اكتشفت خطأ اضغط «إلغاء الاعتماد»: يرجع كل شيء كما كان وتعدّل ثم تعتمد من جديد.', en:'<b>After approval</b> you can print payslips. If you find a mistake, press \u201cUndo approval\u201d: everything is reversed so you can fix it and approve again.'},
   pay_month_applied: {ar:'تم اعتماد هذا الشهر', en:'Month approved'},
   pay_month_done: {ar:'تم اعتماد الشهر وتسجيل الأقساط والديون', en:'Month approved: installments and debts recorded'},
   pay_apply_month_confirm: {ar:'اعتماد {m} بعد تحويل الرواتب:\n• أقساط سلف تُخصم: {loans}\n• مبالغ مؤجلة تُسجَّل ديناً على الشركة: {defer}\n• سداد ديون سابقة: {repay}', en:'Approve {m} after salaries are transferred:\n• Loan installments deducted: {loans}\n• Deferred amounts recorded as company debt: {defer}\n• Earlier debts repaid: {repay}'},
@@ -2464,10 +2481,13 @@ function renderPayrollShell(){
     {label:t('pay_deductions'), value:fmtKWD(tot.ded), tone: tot.ded>0?'warn':null},
     {label:t('pay_net_total'), value:fmtKWD(tot.net), tone:'ok', note:t('pay_net_note')}
   ].concat(hasArrears && (tot.defer || tot.repay) ? [{label:t('pay_defer_total'), value:fmtKWD(tot.defer), tone:'warn', note:t('pay_repay_total')+' '+fmtKWD(tot.repay).replace(/<[^>]+>/g,'')}] : []));
+  h += '<details class="pay-guide"'+((state.payrollRuns||[]).length ? '' : ' open')+'><summary>'+t('pay_guide_title')+'</summary><ol>'+
+    ['pay_guide_1','pay_guide_2','pay_guide_3','pay_guide_4','pay_guide_5'].map(function(k){ return '<li>'+t(k)+'</li>'; }).join('')+'</ol></details>';
   if(run){
     const when = new Date(run.approved_at);
     h += '<div class="notice-bar approved" role="status"><div><b>'+t('pay_approved_title')+'</b><span>'+t('pay_approved_text').replace('{d}', fmtDate(todayStrOf(when)))+'</span></div>'+
-      '<button type="button" class="btn-outline" data-action="pay-slips-all">'+t('pay_print_slips')+'</button></div>';
+      '<div class="nb-actions"><button type="button" class="btn-outline" data-action="pay-slips-all">'+t('pay_print_slips')+'</button>'+
+      '<button type="button" class="btn-outline danger-outline" data-action="pay-unapprove">'+t('pay_unapprove')+'</button></div></div>';
   }
   if(incomplete.length && !run){
     h += '<div class="notice-bar" role="status"><div><b>'+t('pay_missing_title').replace('{n}', incomplete.length)+'</b><span>'+
@@ -2485,10 +2505,10 @@ function renderPayrollShell(){
         '<td>'+fmtKWD(l.gross)+'</td>'+
         '<td>'+num('bonus', l.bonus)+'</td>'+
         '<td>'+(l.unpaid ? '− '+fmtKWD(l.unpaid)+'<div class="cell-note">'+fmtNum(l.unpaidDays,1)+' '+t('day_suffix')+'</div>' : '—')+'</td>'+
-        '<td>'+((l.loanRemaining>0 || (l.frozen && l.loan)) ? num('loan', l.loan, l.loanRemaining)+'<div class="cell-note">'+t('pay_loan_left')+' '+fmtKWD(l.loanRemaining)+'</div>' : '—')+'</td>'+
+        '<td>'+((l.loanRemaining>0 || (l.frozen && l.loan)) ? num('loan', l.loan, l.loanRemaining)+(l.frozen ? '' : '<div class="cell-note">'+t('pay_loan_left')+' '+fmtKWD(l.loanRemaining)+'</div>') : '—')+'</td>'+
         '<td>'+num('other', l.other)+'</td>'+
         (hasArrears ? '<td>'+num('defer', l.defer)+'</td>'+
-          '<td>'+((l.owedBefore>0 || (l.frozen && l.repay)) ? num('repay', l.repay, l.owedBefore)+'<div class="cell-note">'+t('arr_owed_short')+' '+fmtKWD(l.owedBefore)+'</div>' : '—')+'</td>' : '')+
+          '<td>'+((l.owedBefore>0 || (l.frozen && l.repay)) ? num('repay', l.repay, l.owedBefore)+(l.frozen ? '' : '<div class="cell-note">'+t('arr_owed_short')+' '+fmtKWD(l.owedBefore)+'</div>') : '—')+'</td>' : '')+
         '<td class="pay-net"><b>'+fmtKWD(l.net)+'</b>'+(run ? '<button type="button" class="slip-btn" data-action="pay-slip" data-id="'+id+'" title="'+t('pay_slip')+'" aria-label="'+t('pay_slip')+' — '+escapeHtml(l.emp.name)+'">'+ICON.print+'</button>' : '')+'</td></tr>';
     }).join('')+
     '</tbody></table></div></div>';
@@ -2729,16 +2749,37 @@ async function applyPayrollLoans(){
     .replace('{loans}', plain(sum('loan'))).replace('{defer}', plain(sum('defer'))).replace('{repay}', plain(sum('repay')));
   if(!(await confirmAction({title:t('pay_apply_month'), message:msg + (hasPayrollRuns ? '\n'+t('pay_apply_freeze') : ''), confirmLabel:t('pay_apply_month')}))) return;
   if(hasPayrollRuns){
+    // One database transaction: freeze the sheet, deduct installments, record debt entries (all or nothing)
     const all = payrollLines(m);
     const totals = all.reduce(function(a,l){ ['gross','bonus','unpaid','loan','other','defer','repay','net'].forEach(function(k){ a[k] = round3((a[k]||0) + l[k]); }); return a; }, {});
-    const { data, error } = await sb.from('payroll_runs').insert({month:m, totals:totals, lines:all.map(snapshotLine)}).select().single();
+    const pLoans = [], pArrears = [];
+    lines.forEach(function(l){
+      let left = l.loan;
+      state.loans.filter(function(x){ return x.employeeId===l.emp.id && safeNum(x.original)-safeNum(x.deducted) > 0.0005; })
+        .sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); })
+        .forEach(function(loan){ if(left <= 0.0005) return; const take = round3(Math.min(left, safeNum(loan.original)-safeNum(loan.deducted))); pLoans.push({id:loan.id, amount:take}); left = round3(left - take); });
+      if(hasArrears){
+        if(l.defer > 0.0005) pArrears.push({employee_id:l.emp.id, kind:'deferred', amount:round3(l.defer)});
+        if(l.repay > 0.0005) pArrears.push({employee_id:l.emp.id, kind:'repaid', amount:round3(l.repay)});
+      }
+    });
+    const { data, error } = await sb.rpc('approve_payroll_month', {p_month:m, p_totals:totals, p_lines:all.map(snapshotLine), p_loans:pLoans, p_arrears:pArrears});
     if(error){
       // 23505 = unique violation: this month was already approved (possibly on another device)
       if(error.code === '23505'){ await loadPayrollRuns(); renderPayrollShell(); toast(t('pay_already_approved'),'error'); }
       else writeFailed(t('err_save_failed'), error);
       return;
     }
-    state.payrollRuns.push(data);
+    const run = Array.isArray(data) ? data[0] : data;
+    pLoans.forEach(function(x){ const loan = state.loans.find(function(y){ return y.id===x.id; }); if(loan) loan.deducted = round3(safeNum(loan.deducted) + x.amount); });
+    const ids = ((run.effects||{}).arrears)||[];
+    pArrears.forEach(function(a, i){ state.arrears.push({id:ids[i], employeeId:a.employee_id, month:m, kind:a.kind, amount:a.amount, notes:'payroll'}); });
+    state.payrollRuns.push(run);
+    try{ localStorage.setItem(payrollDraftKey(m)+':loansApplied', new Date().toISOString()); }catch(e){}
+    setSyncStatus(true);
+    toast(t('pay_month_done'),'success');
+    renderPayrollShell();
+    return;
   }
   let failed = 0;
   for(const l of lines){
@@ -2772,6 +2813,39 @@ async function applyPayrollLoans(){
   setSyncStatus(failed===0);
   toast(failed ? t('pay_apply_partial') : t('pay_month_done'), failed?'error':'success');
   renderPayrollShell();
+}
+
+async function unapprovePayroll(){
+  const m = uiState.payMonth;
+  const run = getPayrollRun(m);
+  if(!run) return;
+  const fx = run.effects || {};
+  if(!fx.loans){ toast(t('pay_unapprove_legacy'),'error'); return; }
+  const plain = function(n){ return fmtKWD(n).replace(/<[^>]+>/g,''); };
+  const loanSum = (fx.loans||[]).reduce(function(a,x){ return a + safeNum(x.amount); }, 0);
+  const tot = run.totals || {};
+  const msg = t('pay_unapprove_confirm').replace('{m}', payrollMonthLabel(m)).replace('{loans}', plain(loanSum))
+    .replace('{repay}', plain(safeNum(tot.repay))).replace('{defer}', plain(safeNum(tot.defer)));
+  if(!(await confirmAction({title:t('pay_unapprove'), message:msg, confirmLabel:t('pay_unapprove'), danger:true}))) return;
+  const { data, error } = await sb.rpc('unapprove_payroll_month', {p_month:m});
+  if(error){ writeFailed(t('err_save_failed'), error); return; }
+  // Mirror the database: give back installments, drop the debt entries, unfreeze the month
+  (fx.loans||[]).forEach(function(x){ const loan = state.loans.find(function(y){ return y.id===x.id; }); if(loan) loan.deducted = Math.max(0, round3(safeNum(loan.deducted) - safeNum(x.amount))); });
+  const gone = new Set(fx.arrears||[]);
+  state.arrears = (state.arrears||[]).filter(function(a){ return !gone.has(a.id); });
+  state.payrollRuns = state.payrollRuns.filter(function(r){ return r.month !== m; });
+  // Put the approved entries back into the editable sheet, on any device
+  const d = {};
+  ((data && data.lines) || run.lines || []).forEach(function(sn){
+    const e = {}; ['bonus','loan','other','defer','repay'].forEach(function(k){ if(safeNum(sn[k])) e[k] = safeNum(sn[k]); });
+    if(Object.keys(e).length) d[sn.empId] = e;
+  });
+  savePayrollDraft(m, d);
+  try{ localStorage.removeItem(payrollDraftKey(m)+':loansApplied'); }catch(e){}
+  setSyncStatus(true);
+  toast(t('pay_unapproved_done'),'success');
+  renderPayrollShell();
+  refreshDrawer();
 }
 
 function numSpan(v){ return '<span class="num">'+v+'</span>'; }
@@ -4270,6 +4344,7 @@ document.addEventListener('click', function(e){
   else if(action==='dash-pay'){ uiState.payMonth = btn.dataset.m; switchTab('payroll'); }
   else if(action==='pay-goto'){ uiState.payMonth = btn.dataset.m; renderPayrollShell(); const pm = document.getElementById('payMonth'); if(pm) pm.focus(); }
   else if(action==='pay-slips-all') printPayslips(null);
+  else if(action==='pay-unapprove') unapprovePayroll();
   else if(action==='emp-sort'){
     const k = btn.dataset.key;
     uiState.empSort = (uiState.empSort.key===k) ? {key:k, dir:-uiState.empSort.dir} : {key:k, dir:(k==='name'||k==='no'||k==='hire')?1:-1};
